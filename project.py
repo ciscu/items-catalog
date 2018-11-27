@@ -65,9 +65,12 @@ def createNewCategory():
 
 
 ## Edit existing catergory item ##
-@app.route('/catalog/<int:category_id>/edit')
+@app.route('/catalog/<int:category_id>/edit', methods=['GET', 'POST'])
 def editCategory(category_id):
-    return "This is a route to edit item with id {}".format(category_id)
+    if request.method == 'POST':
+        name = request.form['newCategoryValue']
+        return "Post request received susccesfully message was {}".format(name)
+    return render_template('editCategory.html', category_id=category_id)
 
 
 ## Delete existing catergory item ##
