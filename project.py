@@ -56,9 +56,12 @@ def showCatalog():
     return render_template('catalog.html')
 
 ## Add new category ##
-@app.route('/catalog/new')
+@app.route('/catalog/new', methods=['GET','POST'])
 def createNewCategory():
-    return "This is a route to create new Catalog items"
+    if request.method == 'POST':
+        name = request.form['newCategoryName']
+        return "Post request received susccesfully message was {}".format(name)
+    return render_template('createNewCategory.html')
 
 
 ## Edit existing catergory item ##
