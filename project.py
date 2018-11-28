@@ -99,9 +99,12 @@ def createNewItem(category_id):
 
 
 ## Edit existing item in catergory ##
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/edit')
+@app.route('/catalog/<int:category_id>/items/<int:item_id>/edit', methods=['GET', 'POST'])
 def editItem(category_id, item_id):
-    return "This is a route to edit item with id {}, from category {}".format(item_id,category_id)
+    if request.method == 'POST':
+        item = request.form['newItemValue']
+        return 'Succesfully Edited item {} with item id {} and cat id {}'.format(item, item_id, category_id)
+    return render_template('editItem.html', category_id=category_id, item_id=item_id)
 
 
 ## Delete existing item in catergory ##
