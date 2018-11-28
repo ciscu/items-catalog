@@ -69,15 +69,16 @@ def createNewCategory():
 def editCategory(category_id):
     if request.method == 'POST':
         name = request.form['newCategoryValue']
-        return "Post request received susccesfully message was {}".format(name)
+        return "Post request received susccesfully message was {}and id is {}".format(name, category_id)
     return render_template('editCategory.html', category_id=category_id)
 
 
 ## Delete existing catergory item ##
-@app.route('/catalog/<int:category_id>/delete')
+@app.route('/catalog/<int:category_id>/delete', methods=['GET', 'POST'])
 def deleteCategory(category_id):
-    return "This is a route to delete item with id {}".format(category_id)
-
+    if request.method == 'POST':
+        return "Post request received susccesfully catalog item {} was deleted".format(category_id)
+    return render_template('deleteCategory.html', category_id=category_id)
 #
 ## CRUD opperations on the Individual items ##
 #
