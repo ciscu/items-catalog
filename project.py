@@ -87,8 +87,7 @@ def deleteCategory(category_id):
 
 @app.route('/catalog/<int:category_id>/items')
 def listCategoryItems(category_id):
-    return "This page will list out all the items for this category number {}".format(category_id)
-
+    return render_template('listCategoryItems.html', category_id = category_id)
 
 ## Add new item to category ##
 @app.route('/catalog/<int:category_id>/items/new')
