@@ -90,9 +90,12 @@ def listCategoryItems(category_id):
     return render_template('listCategoryItems.html', category_id = category_id)
 
 ## Add new item to category ##
-@app.route('/catalog/<int:category_id>/items/new')
+@app.route('/catalog/<int:category_id>/items/new', methods=['GET', 'POST'])
 def createNewItem(category_id):
-    return "This is a route to create new item for catalog {}".format(category_id)
+    if request.method == 'POST':
+        item = request.form['newCategoryItem']
+        return 'Succesfully created a new item with {}'.format(item)
+    return render_template('createNewItem.html', category_id = category_id)
 
 
 ## Edit existing item in catergory ##
