@@ -102,9 +102,12 @@ def editCategory(category_id):
 ## Delete existing catergory item ##
 @app.route('/catalog/<int:category_id>/delete/', methods=['GET', 'POST'])
 def deleteCategory(category_id):
+    category = session.query(Category).get(category_id)
     if request.method == 'POST':
-        return "Post request received susccesfully catalog item {} was deleted".format(category_id)
-    return render_template('deleteCategory.html', category_id=category_id)
+        session.delete(category)
+        session.commit()
+        return redirect(url_for('showCatalog'), 301)
+    return render_template('deleteCategory.html', category=category)
 #
 ## CRUD opperations on the Individual items ##
 #
