@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7k
+#!/usr/bin/env python2.7
 from databasesetup import Base, User
 from flask import Flask, jsonify, request, url_for, abort, g, render_template
 from sqlalchemy.ext.declarative import declarative_base
@@ -128,7 +128,14 @@ def signin():
     return render_template('signin.html')
 
 ## Register window ##
-
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['username']
+        email = request.form['email']
+        password = request.form['password'] # Add hash functionality with CRUD implementation
+        return "Succesfully registerd in with username {} and email {}".format(name, email)
+    return render_template('signup.html')
 
 if __name__ == '__main__':
     app.secret_key = 'supa_secret_key'
