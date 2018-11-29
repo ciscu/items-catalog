@@ -1,8 +1,10 @@
 {% extends "layout.html" %}
 
 {% block body %}
-  <h1>Items for {{ category_id }}</h1>
+  <h1>Items for {{ category.name }}</h1>
   <ul>
-    <li>test item</li>
+  {% for item in items %}
+    <li>{{ item.name }}</li>
+  {% endfor %}
   </ul>
 {% endblock %}

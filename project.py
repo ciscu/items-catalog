@@ -116,7 +116,9 @@ def deleteCategory(category_id):
 
 @app.route('/catalog/<int:category_id>/items/')
 def listCategoryItems(category_id):
-    return render_template('listCategoryItems.html', category_id = category_id)
+    category = session.query(Category).get(category_id)
+    items = session.query(Item).filter_by(category_id=category_id).all()
+    return render_template('listCategoryItems.html', items=items, category=category)
 
 ## Add new item to category ##
 @app.route('/catalog/<int:category_id>/items/new/', methods=['GET', 'POST'])
