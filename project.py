@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7k
 from databasesetup import Base, User
 from flask import Flask, jsonify, request, url_for, abort, g, render_template
 from sqlalchemy.ext.declarative import declarative_base
@@ -108,15 +109,25 @@ def editItem(category_id, item_id):
 
 
 ## Delete existing item in catergory ##
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/delete')
+@app.route('/catalog/<int:category_id>/items/<int:item_id>/delete', methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
-    return "This is a route to delete item with id {}, from category {}".format(item_id,category_id)
+    if request.method == 'POST':
+        return "Succesfully deteted item {}".format(item_id)
+    return render_template('deleteItem.html', category_id=category_id, item_id=item_id)
 
+#
+## User Authentication
+#
 
+## Sign in window ##
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+    if request.method == 'POST':
+        name = request.form['username']
+        return "Succesfully signed in with username {}".format(name)
+    return render_template('signin.html')
 
-
-
-
+## Register window ##
 
 
 if __name__ == '__main__':
