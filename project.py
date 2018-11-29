@@ -123,10 +123,14 @@ def listCategoryItems(category_id):
 ## Add new item to category ##
 @app.route('/catalog/<int:category_id>/items/new/', methods=['GET', 'POST'])
 def createNewItem(category_id):
+    category = session.query(Category).get(category_id)
     if request.method == 'POST':
-        item = request.form['newCategoryItem']
-        return 'Succesfully created a new item with {}'.format(item)
-    return render_template('createNewItem.html', category_id = category_id)
+        newItem = Item(name = request.form['newCategoryItem'],
+        category_id=category_id, user_id=1)
+        session.add(newItem)
+        session.commit()
+        return redirect(url_for('listCategoryItems', category_id=category.id),301)
+    return render_template('createNewItem.html', category = category)
 
 
 ## Edit existing item in catergory ##
