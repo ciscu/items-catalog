@@ -136,10 +136,13 @@ def createNewItem(category_id):
 ## Edit existing item in catergory ##
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/edit/', methods=['GET', 'POST'])
 def editItem(category_id, item_id):
+    item = session.query(Item).get(item_id)
     if request.method == 'POST':
-        item = request.form['newItemValue']
-        return 'Succesfully Edited item {} with item id {} and cat id {}'.format(item, item_id, category_id)
-    return render_template('editItem.html', category_id=category_id, item_id=item_id)
+        item.name = request.form['newItemValue']
+        session.add(item)
+        session.commit()
+        return redirect(url_for('listCategoryItems', category_id=category_id),301)
+    return render_template('editItem.html', category_id=category_id, item=item)
 
 
 ## Delete existing item in catergory ##

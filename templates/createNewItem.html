@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 
 {% block body %}
-  <h1>Edit Category</h1>
-  <form action="{{ url_for('createNewItem', category_id=category_id)}}" method='POST'>
+  <h1>Create new item for {{ category.name }}</h1>
+  <form action="{{ url_for('createNewItem', category_id=category.id)}}" method='POST'>
     <input type="text" name="newCategoryItem">
-    <input type="submit" name="" value="Edit">
+    <input type="submit" name="" value="Create">
   </form>
 {% endblock %}
