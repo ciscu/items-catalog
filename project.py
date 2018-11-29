@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-from databasesetup import Base, User
+from databasesetup import Base, User, Category, Item
 from flask import Flask, jsonify, request, url_for, abort, g, render_template
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -68,7 +68,9 @@ def logout():
 @app.route('/')
 @app.route('/catalog')
 def showCatalog():
-    return render_template('catalog.html')
+    # GRAB ALL CATALOGS FROM DB
+    categories = session.query(Category).all()
+    return render_template('catalog.html', categories=categories)
 
 ## Add new category ##
 @app.route('/catalog/new', methods=['GET','POST'])

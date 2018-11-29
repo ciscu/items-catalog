@@ -41,11 +41,11 @@ class User(Base):
     	user_id = data['id']
     	return user_id
 
-class Catalog(Base):
-    __tablename__ = "catalog"
+class Category(Base):
+    __tablename__ = "category"
     # Columns
     id = Column(Integer, primary_key=True)
-    catalogName = Column(String(64), nullable=False)
+    categoryName = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
 
     # Connect the user table
@@ -58,11 +58,11 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     itemName = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
-    catalog_id = Column(Integer, ForeignKey('catalog.id'))
+    category_id = Column(Integer, ForeignKey('category.id'))
 
     # Connect the user table
     user = relationship(User)
-    catalog = relationship(Catalog)
+    Category = relationship(Category)
 
 
 engine = create_engine('sqlite:///itemscatalog.db')
