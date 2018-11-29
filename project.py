@@ -33,10 +33,24 @@ session = DBSession()
 ## Routes for Authentication  ##
 #
 
-# Route to login
-@app.route('/login')
-def login():
-    return "This is the page to login"
+
+## Sign in window ##
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+    if request.method == 'POST':
+        name = request.form['username']
+        return "Succesfully signed in with username {}".format(name)
+    return render_template('signin.html')
+
+## Register window ##
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['username']
+        email = request.form['email']
+        password = request.form['password'] # Add hash functionality with CRUD implementation
+        return "Succesfully registerd in with username {} and email {}".format(name, email)
+    return render_template('signup.html')
 
 
 # Route to log out
@@ -115,27 +129,6 @@ def deleteItem(category_id, item_id):
         return "Succesfully deteted item {}".format(item_id)
     return render_template('deleteItem.html', category_id=category_id, item_id=item_id)
 
-#
-## User Authentication
-#
-
-## Sign in window ##
-@app.route('/signin', methods=['GET', 'POST'])
-def signin():
-    if request.method == 'POST':
-        name = request.form['username']
-        return "Succesfully signed in with username {}".format(name)
-    return render_template('signin.html')
-
-## Register window ##
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        name = request.form['username']
-        email = request.form['email']
-        password = request.form['password'] # Add hash functionality with CRUD implementation
-        return "Succesfully registerd in with username {} and email {}".format(name, email)
-    return render_template('signup.html')
 
 if __name__ == '__main__':
     app.secret_key = 'supa_secret_key'
