@@ -45,7 +45,7 @@ class Category(Base):
     __tablename__ = "category"
     # Columns
     id = Column(Integer, primary_key=True)
-    categoryName = Column(String(64), nullable=False)
+    name = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
 
     # Connect the user table
@@ -56,7 +56,7 @@ class Item(Base):
     __tablename__ = "item"
     # Columns
     id = Column(Integer, primary_key=True)
-    itemName = Column(String(64), nullable=False)
+    name = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
     category_id = Column(Integer, ForeignKey('category.id'))
 

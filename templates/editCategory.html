@@ -2,8 +2,8 @@
 
 {% block body %}
   <h1>Edit Category</h1>
-  <form action="{{ url_for('editCategory', category_id=category_id)}}" method='POST'>
-    <input type="text" name="newCategoryValue">
+  <form action="{{ url_for('editCategory', category_id=category.id)}}" method='POST'>
+    <input type="text" name="newCategoryValue" placeholder="{{ category.name}}">
     <input type="submit" name="" value="Edit">
   </form>
 {% endblock %}

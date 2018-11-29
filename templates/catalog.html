@@ -4,9 +4,8 @@
   <h1>Catalog</h1>
   <ul>
     {% for category in categories %}
-    <li> <a href="{{ url_for('listCategoryItems', category_id = category.id )}}">{{ category.categoryName }}</a></li>
+    <li> <a href="{{ url_for('listCategoryItems', category_id = category.id )}}">{{ category.name }}</a></li>
     {% endfor %}
-
   </ul>
 
 {% endblock %}
