@@ -41,6 +41,29 @@ class User(Base):
     	user_id = data['id']
     	return user_id
 
+class Catalog(Base):
+    __tablename__ = "catalog"
+    # Columns
+    id = Column(Integer, primary_key=True)
+    catalogName = Column(String(64), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'))
+
+    # Connect the user table
+    user = relationship(User)
+
+
+class Item(Base):
+    __tablename__ = "item"
+    # Columns
+    id = Column(Integer, primary_key=True)
+    itemName = Column(String(64), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    catalog_id = Column(Integer, ForeignKey(catalog.id))
+
+    # Connect the user table
+    user = relationship(User)
+    catalog = relationship(Catalog)
+
 
 engine = create_engine('sqlite:///itemscatalog.db')
 

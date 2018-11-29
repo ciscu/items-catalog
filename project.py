@@ -18,7 +18,7 @@ import requests
 # assigning flask object to var
 app = Flask(__name__)
 # Connect database engine
-engine = create_engine('sqlite:///restaurantmenuwithusers.db')
+engine = create_engine('sqlite:///itemscatalog.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
