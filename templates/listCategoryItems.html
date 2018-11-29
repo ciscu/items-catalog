@@ -2,9 +2,16 @@
 
 {% block body %}
   <h1>Items for {{ category.name }}</h1>
+  <div class="">
+    <a href="{{ url_for('showCatalog') }}">Main screen</a>
+    <a href="{{ url_for('deleteCategory', category_id=category.id )}}">Delete Catgory</a>
+    <a href="{{ url_for('createNewItem', category_id=category.id)}}">Create new item</a>
+  </div>
   <ul>
   {% for item in items %}
-    <li>{{ item.name }} <a href="{{url_for('editItem', item_id=item.id, category_id=category.id)}}">edit</a> </li>
+    <li>{{ item.name }} <a href="{{url_for('editItem', item_id=item.id, category_id=category.id)}}">edit</a>
+    <a href="{{url_for('deleteItem', item_id=item.id, category_id=category.id)}}">Delete</a>
+    </li>
   {% endfor %}
   </ul>
 {% endblock %}

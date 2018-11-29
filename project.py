@@ -148,9 +148,12 @@ def editItem(category_id, item_id):
 ## Delete existing item in catergory ##
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/delete/', methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
+    item = session.query(Item).get(item_id)
     if request.method == 'POST':
-        return "Succesfully deteted item {}".format(item_id)
-    return render_template('deleteItem.html', category_id=category_id, item_id=item_id)
+        session.delete(item)
+        session.commit()
+        return redirect(url_for('listCategoryItems', category_id=category_id), 301)
+    return render_template('deleteItem.html', category_id=category_id, item=item)
 
 
 if __name__ == '__main__':
