@@ -1,4 +1,4 @@
-from sqlalchemy import Column,Integer,String
+from sqlalchemy import Column,Integer,String,ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
@@ -58,7 +58,7 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     itemName = Column(String(64), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
-    catalog_id = Column(Integer, ForeignKey(catalog.id))
+    catalog_id = Column(Integer, ForeignKey('catalog.id'))
 
     # Connect the user table
     user = relationship(User)
