@@ -10,7 +10,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 from flask import make_response, session as login_session
-import requests
+import requests, random, string
 
 auth = HTTPBasicAuth()
 
@@ -37,6 +37,9 @@ session = DBSession()
 
 @app.route('/signin/', methods=['GET', 'POST'])
 def signin():
+    # State token to prevent forgery attacks
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    login_session['state'] = state
     if request.method == 'POST':
         # If username or password are not filled in return error page
         uname = session.query(User).filter_by(username = request.form['username']).first()
@@ -50,7 +53,7 @@ def signin():
         login_session['picture'] = uname.picture
         login_session['id'] = uname.id
         return redirect(url_for('showCatalog'))
-    return render_template('signin.html')
+    return render_template('signin.html', state=state)
 
 
 ## Register window ##
@@ -137,7 +140,7 @@ def createNewCategory():
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who are signed in, else refer to login
-    if 'username' in login_session and category.user_id == login_session['id']:
+    if 'username' in login_session:
         return render_template('createNewCategory.html')
     return render_template('signin.html')
 
@@ -273,4 +276,4 @@ def showUsersApi():
 if __name__ == '__main__':
     app.secret_key = 'supa_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=8000)
