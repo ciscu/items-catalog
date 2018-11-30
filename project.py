@@ -49,7 +49,13 @@ def signup():
         name = request.form['username']
         email = request.form['email']
         password = request.form['password'] # Add hash functionality with CRUD implementation
-        return "Succesfully registerd in with username {} and email {}".format(name, email)
+        newUser = User(username=name, email=email)
+        newUser.hash_password(password)
+
+        session.add(newUser)
+        session.commit()
+
+        return redirect(url_for('showCatalog'))
     return render_template('signup.html')
 
 
@@ -176,6 +182,10 @@ def showItemsApi(category_id):
     response = [{category.name:js}]
     return jsonify(response)
 
+@app.route('/users/api')
+def showUsersApi():
+    users = session.query(User).all()
+    return jsonify(Users=[u.serialize for u in users])
 
 if __name__ == '__main__':
     app.secret_key = 'supa_secret_key'

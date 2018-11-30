@@ -41,6 +41,16 @@ class User(Base):
     	user_id = data['id']
     	return user_id
 
+    # api callback for users only for ref
+    @property
+    def serialize(self):
+        return {
+            "user id": self.id,
+            "user name": self.username,
+            "email": self.email,
+            "password": self.password_hash
+        }
+
 class Category(Base):
     __tablename__ = "category"
     # Columns
@@ -55,7 +65,8 @@ class Category(Base):
     def serialize(self):
         return {
         'id': self.id,
-        'name': self.name
+        'name': self.name,
+        'user': self.user.username
         }
 
 class Item(Base):
@@ -66,7 +77,7 @@ class Item(Base):
     user_id = Column(Integer, ForeignKey('user.id'))
     category_id = Column(Integer, ForeignKey('category.id'))
 
-    # Connect the user table
+    # Connect the user and category table
     user = relationship(User)
     category = relationship(Category)
 
