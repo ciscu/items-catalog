@@ -29,9 +29,9 @@ session = DBSession()
 #                   Routes for the webpages                              #
 #------------------------------------------------------------------------#
 
-#
+#                              #
 ## Routes for Authentication  ##
-#
+#                              #
 
 
 ## Sign in window ##
@@ -59,9 +59,9 @@ def logout():
     return "This is the page to logout"
 
 
-#
+#                                     #
 ## CRUD opperations on the main page ##
-#
+#                                     #
 
 ## Main Page ##
 
@@ -108,9 +108,10 @@ def deleteCategory(category_id):
         session.commit()
         return redirect(url_for('showCatalog'), 301)
     return render_template('deleteCategory.html', category=category)
-#
+
+#                                            #
 ## CRUD opperations on the Individual items ##
-#
+#                                            #
 
 ## See all items per catergory ##
 
@@ -154,6 +155,26 @@ def deleteItem(category_id, item_id):
         session.commit()
         return redirect(url_for('listCategoryItems', category_id=category_id), 301)
     return render_template('deleteItem.html', category_id=category_id, item=item)
+
+
+#                                            #
+## API endpoints                            ##
+#                                            #
+
+# API endpoint for catalog items
+@app.route('/catalog/api')
+def showCatalogApi():
+    catalogItems = session.query(Category).all()
+    return jsonify(CatalogItems=[i.serialize for i in catalogItems])
+
+# API endpoit for specific category
+@app.route('/catalog/<int:category_id>/items/api/')
+def showItemsApi(category_id):
+    items = session.query(Item).filter_by(category_id = category_id)
+    category = session.query(Category).get(category_id)
+    js = [i.serialize for i in items]
+    response = [{category.name:js}]
+    return jsonify(response)
 
 
 if __name__ == '__main__':

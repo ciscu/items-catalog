@@ -51,6 +51,12 @@ class Category(Base):
     # Connect the user table
     user = relationship(User)
 
+    @property
+    def serialize(self):
+        return {
+        'id': self.id,
+        'name': self.name
+        }
 
 class Item(Base):
     __tablename__ = "item"
@@ -62,8 +68,14 @@ class Item(Base):
 
     # Connect the user table
     user = relationship(User)
-    Category = relationship(Category)
+    category = relationship(Category)
 
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            }
 
 engine = create_engine('sqlite:///itemscatalog.db')
 
