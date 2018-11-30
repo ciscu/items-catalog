@@ -34,6 +34,7 @@ session = DBSession()
 
 
 ## Sign in window ##
+
 @app.route('/signin/', methods=['GET', 'POST'])
 def signin():
     if request.method == 'POST':
@@ -51,7 +52,9 @@ def signin():
         return redirect(url_for('showCatalog'))
     return render_template('signin.html')
 
+
 ## Register window ##
+
 @app.route('/signup/', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -64,23 +67,25 @@ def signup():
         session.add(newUser)
         session.commit()
 
-        return redirect(url_for('showCatalog'))
+        return redirect(url_for('signin'),307)
     return render_template('signup.html')
 
 
-# Route to log out
+## Route to log out ##
+
 @app.route('/logout/')
 def logout():
     if 'id' in login_session:
         del login_session['username']
-        del login_session['picture']
-        del login_session['id']
         del login_session['email']
+        del login_session['id']
+        del login_session['picture']
         return redirect(url_for('showCatalog'), 301)
     return render_template('error.html', errormessage="No user logged in")
 
 
 ## Edit user info ##
+
 @app.route('/users/<int:user_id>/edit/', methods=['GET', 'POST'])
 def editUserInfo(user_id):
     updatedUser = session.query(User).get(user_id)
