@@ -16,6 +16,7 @@ class User(Base):
     picture = Column(String)
     email = Column(String)
     password_hash = Column(String(64))
+    providor = Column(String(32))
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -86,6 +87,8 @@ class Item(Base):
         return {
             'id': self.id,
             'name': self.name,
+            "user id": self.user_id,
+            "username": self.user.username
             }
 
 engine = create_engine('sqlite:///itemscatalog.db')

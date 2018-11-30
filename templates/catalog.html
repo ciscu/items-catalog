@@ -1,10 +1,18 @@
 {% extends "layout.html" %}
 
 {% block body %}
+  {% if user is none %}
   <a href="{{ url_for('signin')}}">Sign in</a>
   <a href="{{ url_for('signup')}}">Sign up</a>
+  {% else %}
+  <a href="{{ url_for('logout') }}">Log out</a>
+  <a href="{{ url_for('editUserInfo', user_id = user['id']) }}">Edit User Info</a>
+  {% endif %}
   <h1>Catalog</h1>
-  <a href="{{url_for('createNewCategory')}}">Create New Item</a>
+  {% if user is not none %}
+    <h3>Welcome {{ user['username'] }}</h3>
+    <a href="{{url_for('createNewCategory')}}">Create New Item</a>
+  {% endif %}
   <ul>
     {% for category in categories %}
     <li> <a href="{{ url_for('listCategoryItems', category_id = category.id )}}">{{ category.name }}</a></li>

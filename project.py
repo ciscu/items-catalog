@@ -4,16 +4,16 @@ from flask import Flask, jsonify, request, url_for, abort, g, render_template, r
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
-
 from flask_httpauth import HTTPBasicAuth
-
 import json
-
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
-from flask import make_response
+from flask import make_response, session as login_session
 import requests
+
+auth = HTTPBasicAuth()
+
 
 # assigning flask object to var
 app = Flask(__name__)
@@ -22,7 +22,6 @@ engine = create_engine('sqlite:///itemscatalog.db?check_same_thread=False')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
-
 
 
 # -----------------------------------------------------------------------#
@@ -35,15 +34,25 @@ session = DBSession()
 
 
 ## Sign in window ##
-@app.route('/signin', methods=['GET', 'POST'])
+@app.route('/signin/', methods=['GET', 'POST'])
 def signin():
     if request.method == 'POST':
-        name = request.form['username']
-        return "Succesfully signed in with username {}".format(name)
+        # If username or password are not filled in return error page
+        uname = session.query(User).filter_by(username = request.form['username']).first()
+        pword = request.form['password']
+        if uname is None:
+            return render_template('error.html', errormessage="Username not found")
+        if uname.verify_password(pword) == False:
+            return render_template('error.html', errormessage="Bad password")
+        login_session['username'] = uname.username
+        login_session['email'] = uname.email
+        login_session['picture'] = uname.picture
+        login_session['id'] = uname.id
+        return redirect(url_for('showCatalog'))
     return render_template('signin.html')
 
 ## Register window ##
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/signup/', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         name = request.form['username']
@@ -60,40 +69,76 @@ def signup():
 
 
 # Route to log out
-@app.route('/logout')
+@app.route('/logout/')
 def logout():
-    return "This is the page to logout"
+    if 'id' in login_session:
+        del login_session['username']
+        del login_session['picture']
+        del login_session['id']
+        del login_session['email']
+        return redirect(url_for('showCatalog'), 301)
+    return render_template('error.html', errormessage="No user logged in")
 
 
-#                                     #
-## CRUD opperations on the main page ##
-#                                     #
+## Edit user info ##
+@app.route('/users/<int:user_id>/edit/', methods=['GET', 'POST'])
+def editUserInfo(user_id):
+    updatedUser = session.query(User).get(user_id)
+    if request.method == 'POST':
+        updatedUser.username = request.form['newUserName']
+        updatedUser.email = request.form['newUserEmail']
+        updatedUser.hash_password(request.form['newUserPassword'])
+
+        session.add(updatedUser)
+        session.commit()
+
+        return redirect(url_for('showCatalog'))
+
+    # Only allow user who are signed in, else refer to login
+    if 'username' in login_session and user_id == login_session['id']:
+        return render_template('editUserInfo.html', user=updatedUser)
+    return render_template('signin.html')
+
+
+#                                        #
+## CRUD opperations on the Catalog page ##
+#                                        #
 
 ## Main Page ##
 
 @app.route('/')
 def redirectCatalog():
     return redirect(url_for('showCatalog'), 301)
+
+
 @app.route('/catalog/')
 def showCatalog():
     categories = session.query(Category).all()
-    return render_template('catalog.html', categories=categories)
+    if 'username' not in login_session:
+        return render_template('catalog.html', categories=categories, user=None)
+    return render_template('catalog.html', categories=categories, user=login_session)
+
 
 ## Add new category ##
+
 @app.route('/catalog/new/', methods=['GET','POST'])
 def createNewCategory():
     if request.method == 'POST':
         name = request.form['newCategoryName']
-        dbUpdate = Category(name=name, user_id=1)
-
+        dbUpdate = Category(name=name, user_id=login_session['id'])
         session.add(dbUpdate)
         session.commit()
         categories = session.query(Category).all()
         return redirect(url_for('showCatalog'), 301)
-    return render_template('createNewCategory.html')
+
+    # Only allow user who are signed in, else refer to login
+    if 'username' in login_session and category.user_id == login_session['id']:
+        return render_template('createNewCategory.html')
+    return render_template('signin.html')
 
 
 ## Edit existing catergory item ##
+
 @app.route('/catalog/<int:category_id>/edit/', methods=['GET', 'POST'])
 def editCategory(category_id):
     category = session.query(Category).get(category_id)
@@ -102,10 +147,15 @@ def editCategory(category_id):
         session.add(category)
         session.commit()
         return redirect(url_for('showCatalog'), 301)
-    return render_template('editCategory.html', category=category)
+
+    # Only allow user who owns the category, else refer to login
+    if 'username' in login_session and category.user_id == login_session['id']:
+        return render_template('editCategory.html', category=category)
+    return render_template('signin.html')
 
 
 ## Delete existing catergory item ##
+
 @app.route('/catalog/<int:category_id>/delete/', methods=['GET', 'POST'])
 def deleteCategory(category_id):
     category = session.query(Category).get(category_id)
@@ -113,34 +163,52 @@ def deleteCategory(category_id):
         session.delete(category)
         session.commit()
         return redirect(url_for('showCatalog'), 301)
-    return render_template('deleteCategory.html', category=category)
+
+    # Only allow user who owns the category, else refer to login
+    if 'username' in login_session and category.user_id == login_session['id']:
+        return render_template('deleteCategory.html', category=category)
+    return render_template('signin.html')
+
 
 #                                            #
 ## CRUD opperations on the Individual items ##
 #                                            #
 
-## See all items per catergory ##
+
+## List all items per catergory ##
 
 @app.route('/catalog/<int:category_id>/items/')
 def listCategoryItems(category_id):
     category = session.query(Category).get(category_id)
     items = session.query(Item).filter_by(category_id=category_id).all()
-    return render_template('listCategoryItems.html', items=items, category=category)
+
+    hasEditAccess = False
+    if 'username' in login_session and login_session['id'] == category.user_id:
+        hasEditAccess = True
+
+    return render_template('listCategoryItems.html', items=items, category=category, hasEditAccess=hasEditAccess)
+
 
 ## Add new item to category ##
+
 @app.route('/catalog/<int:category_id>/items/new/', methods=['GET', 'POST'])
 def createNewItem(category_id):
     category = session.query(Category).get(category_id)
     if request.method == 'POST':
         newItem = Item(name = request.form['newCategoryItem'],
-        category_id=category_id, user_id=1)
+        category_id=category_id, user_id=login_session['id'])
         session.add(newItem)
         session.commit()
         return redirect(url_for('listCategoryItems', category_id=category.id),301)
-    return render_template('createNewItem.html', category = category)
+
+    # Only allow user who owns the category, else refer to login
+    if 'username' in login_session and category.user_id == login_session['id']:
+        return render_template('createNewItem.html', category = category)
+    return render_template('signin.html')
 
 
 ## Edit existing item in catergory ##
+
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/edit/', methods=['GET', 'POST'])
 def editItem(category_id, item_id):
     item = session.query(Item).get(item_id)
@@ -149,10 +217,15 @@ def editItem(category_id, item_id):
         session.add(item)
         session.commit()
         return redirect(url_for('listCategoryItems', category_id=category_id),301)
-    return render_template('editItem.html', category_id=category_id, item=item)
+
+    # Only allow user who owns the category, else refer to login
+    if 'username' in login_session and item.user_id == login_session['id']:
+        return render_template('editItem.html', category_id=category_id, item=item)
+    return render_template('signin.html')
 
 
 ## Delete existing item in catergory ##
+
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/delete/', methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
     item = session.query(Item).get(item_id)
@@ -160,27 +233,32 @@ def deleteItem(category_id, item_id):
         session.delete(item)
         session.commit()
         return redirect(url_for('listCategoryItems', category_id=category_id), 301)
-    return render_template('deleteItem.html', category_id=category_id, item=item)
 
+    # Only allow user who owns the category, else refer to login
+    if 'username' in login_session and item.user_id == login_session['id']:
+        return render_template('deleteItem.html', category_id=category_id, item=item)
+    return render_template('signin.html')
 
 #                                            #
-## API endpoints                            ##
+##              API endpoints               ##
 #                                            #
+
 
 # API endpoint for catalog items
+
 @app.route('/catalog/api')
 def showCatalogApi():
     catalogItems = session.query(Category).all()
     return jsonify(CatalogItems=[i.serialize for i in catalogItems])
 
 # API endpoit for specific category
+
 @app.route('/catalog/<int:category_id>/items/api/')
 def showItemsApi(category_id):
     items = session.query(Item).filter_by(category_id = category_id)
     category = session.query(Category).get(category_id)
     js = [i.serialize for i in items]
-    response = [{category.name:js}]
-    return jsonify(response)
+    return jsonify([{category.name:js}])
 
 @app.route('/users/api')
 def showUsersApi():
