@@ -7,7 +7,7 @@ Getting a token
 If all goes well you should receive a response in the form of:
 
 
-`
+```
 {
   "token": "eyJhbGciOiJIUzI1NiIsImV4cCI6MTU0MzcwNjIwMSwiaWF0IjoxNTQzNzA1NjAxfQ.eyJpZCI6MX0.nr8_lB0k4IyT4INdA_6RvgHGk2L5hONsxoDRU7eP0s4"
 }
@@ -21,6 +21,7 @@ You can substitute the word token for the actual token you will receive from the
 ```
 curl -u token:blank -i -X GET http://localhost:8000/catalog/json
 ```
+
 
 
 ## Using json post request
