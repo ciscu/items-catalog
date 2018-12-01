@@ -199,7 +199,7 @@ def gconnect():
     user_id = getUserId(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
-    login_session['user_id'] = user_id
+    login_session['id'] = user_id
 
     output = ''
     output += '<h1>Welcome, '
