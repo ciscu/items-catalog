@@ -88,7 +88,8 @@ def signup():
     return render_template('signup.html')
 
 
-## Register trough API post ##
+## Register user trough json post ##
+
 @app.route('/jsonsignup', methods=['POST'])
 def jsonsignup():
     # Store json parameters in memory
@@ -110,6 +111,15 @@ def jsonsignup():
     session.add(newUser)
     session.commit()
     return jsonify({ 'username': newUser.name })
+
+
+## Endpoint to request token for Authentication
+@app.route('/token')
+@auth.login_required
+def getAuthToken():
+    token = g.user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
+
 
 ## Edit user info ##
 
@@ -493,17 +503,22 @@ def deleteItem(category_id, item_id):
 ## Setup HTTP auth decorator
 
 @auth.verify_password
-def verify_password(name, password):
-    user = session.query(User).filter_by(name = name).first()
-    if not user or not user.verify_password(password):
-        return False
+def verify_password(name_or_token, password):
+    # Check if it is token
+    validToken = User.verify_auth_token(name_or_token)
+    if validToken:
+        user = session.query(User).filter_by(id = validToken).one()
+    else:
+        user = session.query(User).filter_by(name = name_or_token).first()
+        if not user or not user.verify_password(password):
+            return False
     g.user = user
     return True
 
 
 ## API endpoint for catalog items
 
-@app.route('/catalog/json/')
+@app.route('/catalog/json')
 @auth.login_required
 def showCatalogApi():
     catalogItems = session.query(Category).all()
@@ -511,7 +526,7 @@ def showCatalogApi():
 
 ## API endpoint for specific category
 
-@app.route('/catalog/<int:category_id>/items/json/')
+@app.route('/catalog/<int:category_id>/items/json')
 @auth.login_required
 def showItemsApi(category_id):
     items = session.query(Item).filter_by(category_id = category_id)
@@ -519,7 +534,8 @@ def showItemsApi(category_id):
     js = [i.serialize for i in items]
     return jsonify([js])
 
-@app.route('/users/json/')
+
+@app.route('/users/json')
 @auth.login_required
 def showUsersApi():
     users = session.query(User).all()
@@ -529,6 +545,7 @@ def showUsersApi():
 #                                #
 ##       Helper functions       ##
 #                                #
+
 
 ## Create a user from an Oauth login
 
