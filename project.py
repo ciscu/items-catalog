@@ -24,6 +24,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+# Googles client secret file
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 
 
@@ -465,6 +466,11 @@ def deleteItem(category_id, item_id):
 #                                            #
 
 
+## Setup HTTP auth decorator
+
+
+
+
 # API endpoint for catalog items
 
 @app.route('/catalog/json/')
@@ -491,6 +497,8 @@ def showUsersApi():
 ##       Helper functions       ##
 #                                #
 
+## Create a user from an Oauth login
+
 def createUser(login_session):
     newUser = User(name = login_session['name'], email = login_session['email'],
     picture = login_session['picture'], provider= login_session['provider'])
@@ -499,9 +507,15 @@ def createUser(login_session):
     user = session.query(User).filter_by(email = login_session['email']).one()
     return user.id
 
+
+## Returns User class object
+
 def getUserInfo(user_id):
     user = session.query(User).filter_by(id = user_id).one()
     return user
+
+
+## Returns user id with email as given arguments
 
 def getUserId(email):
     try:
@@ -510,9 +524,12 @@ def getUserId(email):
     except:
         return None
 
-# Render token
+
+## Renders random size token
+
 def renderToken(size):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(size))
+
 
 
 if __name__ == '__main__':
