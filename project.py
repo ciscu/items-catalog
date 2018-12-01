@@ -88,6 +88,29 @@ def signup():
     return render_template('signup.html')
 
 
+## Register trough API post ##
+@app.route('/jsonsignup', methods=['POST'])
+def jsonsignup():
+    # Store json parameters in memory
+    user = request.json.get('name')
+    password = request.json.get('password')
+    email = request.json.get('password')
+
+    # Check if json paramaters are Valid
+    if user is None or password is None or email is None:
+        abort(400)
+
+    # Check if user already exists
+    if session.query(User).filter_by(email=email).first() is not None:
+        abort(400)
+
+    # Store user credentials in database
+    newUser = User(name=user, email=email, provider="json")
+    newUser.hash_password(password)
+    session.add(newUser)
+    session.commit()
+    return jsonify({ 'username': newUser.name })
+
 ## Edit user info ##
 
 @app.route('/users/<int:user_id>/edit/', methods=['GET', 'POST'])
@@ -461,6 +484,7 @@ def deleteItem(category_id, item_id):
     login_session['state'] = state
     return render_template('signin.html')
 
+
 #                                            #
 ##              API endpoints               ##
 #                                            #
@@ -477,8 +501,7 @@ def verify_password(name, password):
     return True
 
 
-
-# API endpoint for catalog items
+## API endpoint for catalog items
 
 @app.route('/catalog/json/')
 @auth.login_required
@@ -486,7 +509,7 @@ def showCatalogApi():
     catalogItems = session.query(Category).all()
     return jsonify(CatalogItems=[i.serialize for i in catalogItems])
 
-# API endpoit for specific category
+## API endpoint for specific category
 
 @app.route('/catalog/<int:category_id>/items/json/')
 @auth.login_required
