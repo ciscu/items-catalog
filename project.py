@@ -205,15 +205,7 @@ def gconnect():
         user_id = createUser(login_session)
     login_session['id'] = user_id
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['name']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    print "done!"
-    return output
+    return "Successfully logged in with Google"
 
 
 ## Facebook sign in ##
@@ -255,15 +247,7 @@ def fbconnect():
         user_id = createUser(login_session)
     login_session['id'] = user_id
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['name']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    print "done!"
-    return output
+    return "Susccesfully logged user in with facebook"
 
 
 ## Route to log out ##

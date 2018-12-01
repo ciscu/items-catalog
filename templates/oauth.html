@@ -1,4 +1,5 @@
 <script>
+
 // JS FOR GOOGLE OAUTH lOGIN
 
 
@@ -76,8 +77,8 @@ FB.api('/me', function(response) {
     if (result) {
       $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
      setTimeout(function() {
-      window.location.href = "/";
-     }, 4000);
+      window.location.href = "/catalog/";
+    }, 1000);
 
   } else {
     $('#result').html('Failed to make a server-side call. Check your configuration and console.');
@@ -98,4 +99,5 @@ FB.api('/me', function(response) {
 
 
 // END OF JS FOR FACEBOOK LOGIN
+
 </script>
