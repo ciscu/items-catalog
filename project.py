@@ -468,12 +468,20 @@ def deleteItem(category_id, item_id):
 
 ## Setup HTTP auth decorator
 
+@auth.verify_password
+def verify_password(name, password):
+    user = session.query(User).filter_by(name = name).first()
+    if not user or not user.verify_password(password):
+        return False
+    g.user = user
+    return True
 
 
 
 # API endpoint for catalog items
 
 @app.route('/catalog/json/')
+@auth.login_required
 def showCatalogApi():
     catalogItems = session.query(Category).all()
     return jsonify(CatalogItems=[i.serialize for i in catalogItems])
@@ -481,6 +489,7 @@ def showCatalogApi():
 # API endpoit for specific category
 
 @app.route('/catalog/<int:category_id>/items/json/')
+@auth.login_required
 def showItemsApi(category_id):
     items = session.query(Item).filter_by(category_id = category_id)
     category = session.query(Category).get(category_id)
@@ -488,6 +497,7 @@ def showItemsApi(category_id):
     return jsonify([js])
 
 @app.route('/users/json/')
+@auth.login_required
 def showUsersApi():
     users = session.query(User).all()
     return jsonify(Users=[u.serialize for u in users])
