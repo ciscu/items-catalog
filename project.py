@@ -95,6 +95,12 @@ def editUserInfo(user_id):
     if request.method == 'POST':
         updatedUser.name = request.form['newUserName']
         updatedUser.email = request.form['newUserEmail']
+
+        # Check if updated email does not already exist
+        users = session.query(User).filter_by(email=request.form['newUserEmail']).first()
+        if users is not None:
+            return redirect('error.html', errormessage="Email address already exists")
+
         updatedUser.hash_password(request.form['newUserPassword'])
 
         session.add(updatedUser)
