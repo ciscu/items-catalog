@@ -3,7 +3,7 @@
 {% block body %}
   <h1>Edit user: {{ user.name}}</h1>
   <form action="{{ url_for('editUserInfo', user_id=user.id)}}" method='POST'>
-    <input type="text" name="newUserName" value="{{ user.username }}">
+    <input type="text" name="newUserName" value="{{ user.name }}">
     <input type="text" name="newUserEmail" value="{{ user.email }}">
     <input type="password" name="newUserPassword">
 

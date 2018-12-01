@@ -12,6 +12,7 @@ import httplib2
 from flask import make_response, session as login_session
 import requests, random, string
 
+
 auth = HTTPBasicAuth()
 h = httplib2.Http()
 
@@ -26,9 +27,11 @@ session = DBSession()
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 
 
-# -----------------------------------------------------------------------#
-#                   Routes for the webpages                              #
-#------------------------------------------------------------------------#
+   #------------------------------------------------------------------------#
+   #                     Routes for the webpages                            #
+   #------------------------------------------------------------------------#
+
+
 
 #                              #
 ## Routes for Authentication  ##
@@ -45,17 +48,17 @@ def signin():
             return render_template('error.html', errormessage="Invalid state token {} expecting {}".format(request.form['stateToken'],login_session['state']))
 
         # If username or password are not filled in return error page
-        uname = session.query(User).filter_by(username = request.form['username']).first()
+        uname = session.query(User).filter_by(name = request.form['username']).first()
         pword = request.form['password']
         if uname is None:
             return render_template('error.html', errormessage="Username not found")
         if uname.verify_password(pword) == False:
             return render_template('error.html', errormessage="Bad password")
-        login_session['username'] = uname.username
+        login_session['name'] = uname.name
         login_session['email'] = uname.email
         login_session['picture'] = uname.picture
         login_session['id'] = uname.id
-        login_session['providor'] = 'local'
+        login_session['provider'] = 'local'
         return redirect(url_for('showCatalog'))
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     login_session['state'] = state
@@ -70,13 +73,16 @@ def signup():
         name = request.form['username']
         email = request.form['email']
         password = request.form['password'] # Add hash functionality with CRUD implementation
-        newUser = User(username=name, email=email)
+        users = session.query(User).filter_by(email=email).first()
+        if users is not None:
+            return render_template('error.html', errormessage="Users already exists")
+        newUser = User(name=name, email=email, provider='local')
         newUser.hash_password(password)
 
         session.add(newUser)
         session.commit()
 
-        return redirect(url_for('signin'),307)
+        return redirect(url_for('showCatalog'))
     return render_template('signup.html')
 
 
@@ -85,11 +91,11 @@ def signup():
 @app.route('/logout/')
 def logout():
     if 'id' in login_session:
-        del login_session['username']
+        del login_session['name']
         del login_session['email']
         del login_session['id']
         del login_session['picture']
-        return redirect(url_for('showCatalog'), 301)
+        return redirect(url_for('showCatalog'))
     return render_template('error.html', errormessage="No user logged in")
 
 
@@ -99,7 +105,7 @@ def logout():
 def editUserInfo(user_id):
     updatedUser = session.query(User).get(user_id)
     if request.method == 'POST':
-        updatedUser.username = request.form['newUserName']
+        updatedUser.name = request.form['newUserName']
         updatedUser.email = request.form['newUserEmail']
         updatedUser.hash_password(request.form['newUserPassword'])
 
@@ -109,7 +115,7 @@ def editUserInfo(user_id):
         return redirect(url_for('showCatalog'))
 
     # Only allow user who are signed in, else refer to login
-    if 'username' in login_session and user_id == login_session['id']:
+    if 'name' in login_session and user_id == login_session['id']:
         return render_template('editUserInfo.html', user=updatedUser)
     return render_template('signin.html')
 
@@ -185,7 +191,7 @@ def gconnect():
 
     data = answer.json()
 
-    login_session['username'] = data['name']
+    login_session['name'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
@@ -197,14 +203,15 @@ def gconnect():
 
     output = ''
     output += '<h1>Welcome, '
-    output += login_session['username']
+    output += login_session['name']
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
+
+
 #                                        #
 ## CRUD opperations on the Catalog page ##
 #                                        #
@@ -219,7 +226,7 @@ def redirectCatalog():
 @app.route('/catalog/')
 def showCatalog():
     categories = session.query(Category).all()
-    if 'username' not in login_session:
+    if 'name' not in login_session:
         return render_template('catalog.html', categories=categories, user=None)
     return render_template('catalog.html', categories=categories, user=login_session)
 
@@ -237,7 +244,7 @@ def createNewCategory():
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who are signed in, else refer to login
-    if 'username' in login_session:
+    if 'name' in login_session:
         return render_template('createNewCategory.html')
     return render_template('signin.html')
 
@@ -254,7 +261,7 @@ def editCategory(category_id):
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who owns the category, else refer to login
-    if 'username' in login_session and category.user_id == login_session['id']:
+    if 'name' in login_session and category.user_id == login_session['id']:
         return render_template('editCategory.html', category=category)
     return render_template('signin.html')
 
@@ -270,7 +277,7 @@ def deleteCategory(category_id):
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who owns the category, else refer to login
-    if 'username' in login_session and category.user_id == login_session['id']:
+    if 'name' in login_session and category.user_id == login_session['id']:
         return render_template('deleteCategory.html', category=category)
     return render_template('signin.html')
 
@@ -288,7 +295,7 @@ def listCategoryItems(category_id):
     items = session.query(Item).filter_by(category_id=category_id).all()
 
     hasEditAccess = False
-    if 'username' in login_session and login_session['id'] == category.user_id:
+    if 'name' in login_session and login_session['id'] == category.user_id:
         hasEditAccess = True
 
     return render_template('listCategoryItems.html', items=items, category=category, hasEditAccess=hasEditAccess)
@@ -307,7 +314,7 @@ def createNewItem(category_id):
         return redirect(url_for('listCategoryItems', category_id=category.id),301)
 
     # Only allow user who owns the category, else refer to login
-    if 'username' in login_session and category.user_id == login_session['id']:
+    if 'name' in login_session and category.user_id == login_session['id']:
         return render_template('createNewItem.html', category = category)
     return render_template('signin.html')
 
@@ -324,7 +331,7 @@ def editItem(category_id, item_id):
         return redirect(url_for('listCategoryItems', category_id=category_id),301)
 
     # Only allow user who owns the category, else refer to login
-    if 'username' in login_session and item.user_id == login_session['id']:
+    if 'name' in login_session and item.user_id == login_session['id']:
         return render_template('editItem.html', category_id=category_id, item=item)
     return render_template('signin.html')
 
@@ -340,7 +347,7 @@ def deleteItem(category_id, item_id):
         return redirect(url_for('listCategoryItems', category_id=category_id), 301)
 
     # Only allow user who owns the category, else refer to login
-    if 'username' in login_session and item.user_id == login_session['id']:
+    if 'name' in login_session and item.user_id == login_session['id']:
         return render_template('deleteItem.html', category_id=category_id, item=item)
     return render_template('signin.html')
 
@@ -376,8 +383,8 @@ def showUsersApi():
 #                                #
 
 def createUser(login_session):
-    newUser = User (name = login_session['username'], email = login_session['email'],
-    picture = login_session['picture'])
+    newUser = User(name = login_session['name'], email = login_session['email'],
+    picture = login_session['picture'], provider= login_session['provider'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email = login_session['email']).one()

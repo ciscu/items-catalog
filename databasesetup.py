@@ -12,11 +12,11 @@ secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    username = Column(String(32), index=True)
+    name = Column(String(32), index=True)
     picture = Column(String)
     email = Column(String)
     password_hash = Column(String(64))
-    providor = Column(String(32))
+    provider = Column(String(32))
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -47,9 +47,10 @@ class User(Base):
     def serialize(self):
         return {
             "user id": self.id,
-            "user name": self.username,
+            "user name": self.name,
             "email": self.email,
-            "password": self.password_hash
+            "password": self.password_hash,
+            "Provider": self.provider
         }
 
 class Category(Base):
@@ -67,7 +68,7 @@ class Category(Base):
         return {
         'id': self.id,
         'name': self.name,
-        'user': self.user.username
+        'user': self.user.name
         }
 
 class Item(Base):
@@ -88,7 +89,7 @@ class Item(Base):
             'id': self.id,
             'name': self.name,
             "user id": self.user_id,
-            "username": self.user.username
+            "username": self.user.name
             }
 
 engine = create_engine('sqlite:///itemscatalog.db')
