@@ -91,11 +91,50 @@ def signup():
 @app.route('/logout/')
 def logout():
     if 'id' in login_session:
-        del login_session['name']
-        del login_session['email']
-        del login_session['id']
-        del login_session['picture']
-        return redirect(url_for('showCatalog'))
+        # if login_session['provider'] == 'facebook':
+        #     facebook_id = login_session['facebook_id']
+        #     url = 'https://graph.facebook.com/%s/permissions' % facebook_id
+        #     h = httplib2.Http()
+        #     result = h.request(url, 'DELETE')[1]
+        #     del login_session['username']
+        #     del login_session['email']
+        #     # del login_session['picture']
+        #     del login_session['user_id']
+        #     del login_session['facebook_id']
+        #     return redirect(url_for('showCatalog'))
+
+        ## Google disconnect
+        if login_session['provider'] == 'google':
+            access_token = login_session.get('access_token')
+            if access_token is None:
+                print 'Access Token is None'
+                response = make_response(json.dumps('Current user not connected.'), 401)
+                response.headers['Content-Type'] = 'application/json'
+                return response
+            url = 'https://accounts.google.com/o/oauth2/revoke?token={}'.format(access_token)
+            h = httplib2.Http()
+            result = h.request(url, 'POST')[0]
+            if result['status'] == '200':
+                del login_session['access_token']
+                del login_session['gplus_id']
+                del login_session['name']
+                del login_session['email']
+                del login_session['picture']
+                del login_session['id']
+                response = make_response(json.dumps('Successfully disconnected.'), 200)
+                response.headers['Content-Type'] = 'application/json'
+                return redirect(url_for('showCatalog'))
+            else:
+                response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+                response.headers['Content-Type'] = 'application/json'
+                return response
+
+        elif login_session['provider'] == 'local':
+            del login_session['name']
+            del login_session['email']
+            del login_session['id']
+            del login_session['picture']
+            return redirect(url_for('showCatalog'))
     return render_template('error.html', errormessage="No user logged in")
 
 
