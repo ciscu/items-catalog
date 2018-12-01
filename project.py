@@ -61,7 +61,7 @@ def signin():
         login_session['id'] = uname.id
         login_session['provider'] = 'local'
         return redirect(url_for('showCatalog'))
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html', state=state)
 
@@ -91,27 +91,37 @@ def signup():
 
 @app.route('/users/<int:user_id>/edit/', methods=['GET', 'POST'])
 def editUserInfo(user_id):
-    updatedUser = session.query(User).get(user_id)
+    user = session.query(User).get(user_id)
     if request.method == 'POST':
-        updatedUser.name = request.form['newUserName']
-        updatedUser.email = request.form['newUserEmail']
+        newEmail = request.form['newUserEmail']
+        newName = request.form['newUserName']
+        user.hash_password(request.form['newUserPassword'])
+
+        # Check if email is altered, if so, check if it already exists
+        if user.email != newEmail:
+            findEmail = session.query(User).filter_by(email=newEmail).first()
+            if findEmail is not None:
+                return render_template('error.html', errormessage="Email address: {} already in use".format(findEmail.email))
+        user.name = newName
+        user.email = newEmail
 
         # Check if updated email does not already exist
-        users = session.query(User).filter_by(email=request.form['newUserEmail']).first()
-        if users is not None:
-            return redirect('error.html', errormessage="Email address already exists")
 
-        updatedUser.hash_password(request.form['newUserPassword'])
+        user.hash_password(request.form['newUserPassword'])
 
-        session.add(updatedUser)
+        session.add(user)
         session.commit()
 
+        login_session['name'] = user.name
+        login_session['email'] = user.email
         return redirect(url_for('showCatalog'))
 
     # Only allow user who are signed in, else refer to login
     if 'name' in login_session and user_id == login_session['id']:
-        return render_template('editUserInfo.html', user=updatedUser)
-    return render_template('signin.html')
+        return render_template('editUserInfo.html', user=login_session)
+    state = renderToken(32)
+    login_session['state'] = state
+    return render_template('signin.html', state=state)
 
 
 ## Google sign in ##
@@ -349,6 +359,8 @@ def createNewCategory():
     # Only allow user who are signed in, else refer to login
     if 'name' in login_session:
         return render_template('createNewCategory.html')
+    state = renderToken(32)
+    login_session['state'] = state
     return render_template('signin.html')
 
 
@@ -365,7 +377,9 @@ def editCategory(category_id):
 
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
-        return render_template('editCategory.html', category=category)
+            return render_template('editCategory.html', category=category)
+    state = renderToken(32)
+    login_session['state'] = state
     return render_template('signin.html')
 
 
@@ -382,6 +396,8 @@ def deleteCategory(category_id):
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
         return render_template('deleteCategory.html', category=category)
+    state = renderToken(32)
+    login_session['state'] = state
     return render_template('signin.html')
 
 
@@ -419,6 +435,8 @@ def createNewItem(category_id):
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
         return render_template('createNewItem.html', category = category)
+    state = renderToken(32)
+    login_session['state'] = state
     return render_template('signin.html')
 
 
@@ -436,6 +454,8 @@ def editItem(category_id, item_id):
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and item.user_id == login_session['id']:
         return render_template('editItem.html', category_id=category_id, item=item)
+    state = renderToken(32)
+    login_session['state'] = state
     return render_template('signin.html')
 
 
@@ -452,6 +472,8 @@ def deleteItem(category_id, item_id):
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and item.user_id == login_session['id']:
         return render_template('deleteItem.html', category_id=category_id, item=item)
+    state = renderToken(32)
+    login_session['state'] = state
     return render_template('signin.html')
 
 #                                            #
@@ -461,21 +483,21 @@ def deleteItem(category_id, item_id):
 
 # API endpoint for catalog items
 
-@app.route('/catalog/api')
+@app.route('/catalog/json/')
 def showCatalogApi():
     catalogItems = session.query(Category).all()
     return jsonify(CatalogItems=[i.serialize for i in catalogItems])
 
 # API endpoit for specific category
 
-@app.route('/catalog/<int:category_id>/items/api/')
+@app.route('/catalog/<int:category_id>/items/json/')
 def showItemsApi(category_id):
     items = session.query(Item).filter_by(category_id = category_id)
     category = session.query(Category).get(category_id)
     js = [i.serialize for i in items]
     return jsonify([js])
 
-@app.route('/users/api')
+@app.route('/users/json/')
 def showUsersApi():
     users = session.query(User).all()
     return jsonify(Users=[u.serialize for u in users])
@@ -503,6 +525,10 @@ def getUserId(email):
         return user.id
     except:
         return None
+
+# Render token
+def renderToken(size):
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(size))
 
 
 if __name__ == '__main__':
