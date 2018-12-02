@@ -46,3 +46,10 @@ You can make an api request of a all the catalogs like so:
 `curl -u username:password -i -X GET http://localhost:8000/catalog/json`
 
 Or make a list of specific
+
+
+# Rate limiting
+
+In order to protect our server from overload i implemented a limiter based on IP address
+
+To activate redis first run `redis-server` on your machine

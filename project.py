@@ -11,27 +11,118 @@ from oauth2client.client import FlowExchangeError
 import httplib2
 from flask import make_response, session as login_session
 import requests, random, string
+from redis import Redis
+import time
+from functools import update_wrapper
+
+    #------------------------------------------------------------------------#
+    #                     Configuration code                                 #
+    #------------------------------------------------------------------------#
+
+## Shortcuts
+
+# Redis server application to limit the access amounts per IP
+redis = Redis()
 
 
+# HTTP Authentication
 auth = HTTPBasicAuth()
+
+
+#  Extensive lib to do requests
 h = httplib2.Http()
 
-# assigning flask object to var
-app = Flask(__name__)
-# Connect database engine
+
+# Connecting to the database
 engine = create_engine('sqlite:///itemscatalog.db?check_same_thread=False')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 # Googles client secret file
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 
 
+# assigning flask object to var
+app = Flask(__name__)
 
-   #------------------------------------------------------------------------#
-   #                     Routes for the webpages                            #
-   #------------------------------------------------------------------------#
+# Rate limit Configuration
+class RateLimit(object):
+    expiration_window = 10
+
+    def __init__(self, key_prefix, limit, per, send_x_headers):
+        self.reset = (int(time.time()) // per) * per + per
+        self.key = key_prefix + str(self.reset)
+        self.limit = limit
+        self.per = per
+        self.send_x_headers = send_x_headers
+        p = redis.pipeline()
+        p.incr(self.key)
+        p.expireat(self.key, self.reset + self.expiration_window)
+        self.current = min(p.execute()[0], limit)
+
+    remaining = property(lambda x: x.limit - x.current)
+    over_limit = property(lambda x: x.current >= x.limit)
+
+def get_view_rate_limit():
+    return getattr(g, '_view_rate_limit', None)
+
+def on_over_limit(limit):
+    return (jsonify({'data':'You hit the rate limit','error':'429'}),429)
+
+def ratelimit(limit, per=300, send_x_headers=True,
+              over_limit=on_over_limit,
+              scope_func=lambda: request.remote_addr,
+              key_func=lambda: request.endpoint):
+    def decorator(f):
+        def rate_limited(*args, **kwargs):
+            key = 'rate-limit/%s/%s/' % (key_func(), scope_func())
+            rlimit = RateLimit(key, limit, per, send_x_headers)
+            g._view_rate_limit = rlimit
+            if over_limit is not None and rlimit.over_limit:
+                return over_limit(rlimit)
+            return f(*args, **kwargs)
+        return update_wrapper(rate_limited, f)
+    return decorator
+
+@app.after_request
+def inject_x_rate_headers(response):
+    limit = get_view_rate_limit()
+    if limit and limit.send_x_headers:
+        h = response.headers
+        h.add('X-RateLimit-Remaining', str(limit.remaining))
+        h.add('X-RateLimit-Limit', str(limit.limit))
+        h.add('X-RateLimit-Reset', str(limit.reset))
+    return response
+
+## Add rate limiter
+
+@app.route('/ratelimit')
+@ratelimit(limit=300, per=30*1)
+def stopTheHogs():
+    return jsonify({'response':'this is a rate limited response'})
+
+
+## Setup HTTP auth decorator
+
+@auth.verify_password
+def verify_password(name_or_token, password):
+    # Check if it is token
+    validToken = User.verify_auth_token(name_or_token)
+    if validToken:
+        user = session.query(User).filter_by(id = validToken).one()
+    else:
+        user = session.query(User).filter_by(name = name_or_token).first()
+        if not user or not user.verify_password(password):
+            return False
+    g.user = user
+    return True
+
+
+    #------------------------------------------------------------------------#
+    #                     Routes for the webpages                            #
+    #------------------------------------------------------------------------#
 
 
 
@@ -516,34 +607,21 @@ def deleteItem(category_id, item_id):
 #                                            #
 
 
-## Setup HTTP auth decorator
-
-@auth.verify_password
-def verify_password(name_or_token, password):
-    # Check if it is token
-    validToken = User.verify_auth_token(name_or_token)
-    if validToken:
-        user = session.query(User).filter_by(id = validToken).one()
-    else:
-        user = session.query(User).filter_by(name = name_or_token).first()
-        if not user or not user.verify_password(password):
-            return False
-    g.user = user
-    return True
-
-
 ## API endpoint for catalog items
 
 @app.route('/catalog/json/')
 @auth.login_required
+@ratelimit(limit=300, per=30*1)
 def showCatalogApi():
     catalogItems = session.query(Category).all()
     return jsonify(CatalogItems=[i.serialize for i in catalogItems])
+
 
 ## API endpoint for specific category
 
 @app.route('/catalog/<int:category_id>/items/json/')
 @auth.login_required
+@ratelimit(limit=300, per=30*1)
 def showItemsApi(category_id):
     items = session.query(Item).filter_by(category_id = category_id)
     name = session.query(Category).get(category_id)
@@ -556,6 +634,7 @@ def showItemsApi(category_id):
 
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/json')
 @auth.login_required
+@ratelimit(limit=300, per=30*1)
 def showItemApi(category_id, item_id):
     item = session.query(Item).get(item_id)
     return jsonify([item.serialize])
@@ -563,6 +642,7 @@ def showItemApi(category_id, item_id):
 
 @app.route('/users/json')
 @auth.login_required
+@ratelimit(limit=300, per=30*1)
 def showUsersApi():
     users = session.query(User).all()
     return jsonify(Users=[u.serialize for u in users])
