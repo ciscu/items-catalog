@@ -27,7 +27,15 @@
   <div class="">
     <ul>
       {% for item in items %}
-      <li><a href="{{ url_for( 'listItem', category_name=item.category_name, item_name=item.name )}}">{{ item.name }}</a></li>
+
+        {% for category in categories %}
+
+          {% if item.category_id == category.id %}
+            <li><a href="{{ url_for( 'listItem', category_name=category.name, item_name=item.name )}}">{{ item.name }}</a></li>
+          {% endif %}
+
+        {% endfor %}
+
       {% endfor %}
     </ul>
   </div>
