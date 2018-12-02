@@ -24,5 +24,12 @@
     <li> <a href="{{ url_for('listCategoryItems', category_id = category.id )}}">{{ category.name }}</a></li>
     {% endfor %}
   </ul>
+  <div class="">
+    <ul>
+      {% for item in items %}
+      <li><a href="{{ url_for( 'listItem', category_id=item.category_id, item_id=item.id )}}">{{ item.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
 
 {% endblock %}

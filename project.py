@@ -3,7 +3,7 @@ from databasesetup import Base, User, Category, Item
 from flask import Flask, jsonify, request, url_for, abort, g, render_template, redirect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from flask_httpauth import HTTPBasicAuth
 import json
 from oauth2client.client import flow_from_clientsecrets
@@ -357,9 +357,10 @@ def redirectCatalog():
 @app.route('/catalog/')
 def showCatalog():
     categories = session.query(Category).all()
+    items = session.query(Item).order_by(desc(Item.id)).limit(7)
     if 'name' not in login_session:
-        return render_template('catalog.html', categories=categories, user=None)
-    return render_template('catalog.html', categories=categories, user=login_session)
+        return render_template('catalog.html', items=items, categories=categories, user=None)
+    return render_template('catalog.html', items=items, categories=categories, user=login_session)
 
 
 ## Add new category ##
