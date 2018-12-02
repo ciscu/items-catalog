@@ -5,17 +5,17 @@
   <div class="">
     <a href="{{ url_for('showCatalog') }}">Main screen</a>
     {% if hasEditAccess == True %}
-    <a href="{{ url_for('deleteCategory', category_id=category.id )}}">Delete Catgory</a>
-    <a href="{{url_for('editCategory', category_id=category.id)}}">Edit Item</a>
-    <a href="{{ url_for('createNewItem', category_id=category.id)}}">New item</a>
+    <a href="{{ url_for('deleteCategory',  category_name=category.name )}}">Delete Catgory</a>
+    <a href="{{ url_for('editCategory',     category_name=category.name)}}">Edit Item</a>
+    <a href="{{ url_for('createNewItem',   category_name=category.name)}}">New item</a>
     {% endif %}
   </div>
   <ul>
   {% for item in items %}
-    <li> <a href="{{ url_for('listItem', item_id=item.id, category_id=item.category_id) }}">{{ item.name }}</a>
+    <li> <a href="{{ url_for('listItem', item_name=item.name, category_name=category.name) }}">{{ item.name }}</a>
       {% if hasEditAccess == True %}
-      <a href="{{url_for('editItem', item_id=item.id, category_id=category.id)}}">edit</a>
-      <a href="{{url_for('deleteItem', item_id=item.id, category_id=category.id)}}">Delete</a>
+      <a href="{{ url_for('editItem',    item_name=item.name, category_name=category.name)}}">edit</a>
+      <a href="{{ url_for('deleteItem',  item_name=item.name, category_name=category.name)}}">Delete</a>
       {% endif %}
     </li>
   {% endfor %}

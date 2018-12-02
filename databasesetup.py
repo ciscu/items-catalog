@@ -1,7 +1,7 @@
 from sqlalchemy import Column,Integer,String,ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, UniqueConstraint
 from passlib.apps import custom_app_context as pwd_context
 import random, string
 from itsdangerous import(TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
@@ -14,7 +14,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(32), index=True)
     picture = Column(String)
-    email = Column(String)
+    email = Column(String, unique=True)
     password_hash = Column(String(64))
     provider = Column(String(32))
 
@@ -57,7 +57,7 @@ class Category(Base):
     __tablename__ = "category"
     # Columns
     id = Column(Integer, primary_key=True)
-    name = Column(String(64), nullable=False)
+    name = Column(String(64), unique=True, nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
 
     # Connect the user table

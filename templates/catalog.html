@@ -21,13 +21,13 @@
   {% endif %}
   <ul>
     {% for category in categories %}
-    <li> <a href="{{ url_for('listCategoryItems', category_id = category.id )}}">{{ category.name }}</a></li>
+    <li> <a href="{{ url_for('listCategoryItems', category_name= category.name )}}">{{ category.name }}</a></li>
     {% endfor %}
   </ul>
   <div class="">
     <ul>
       {% for item in items %}
-      <li><a href="{{ url_for( 'listItem', category_id=item.category_id, item_id=item.id )}}">{{ item.name }}</a></li>
+      <li><a href="{{ url_for( 'listItem', category_name=item.category_name, item_name=item.name )}}">{{ item.name }}</a></li>
       {% endfor %}
     </ul>
   </div>

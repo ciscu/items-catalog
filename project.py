@@ -460,10 +460,14 @@ def showCatalog():
 def createNewCategory():
     if request.method == 'POST':
         name = request.form['newCategoryName']
+
+        # Check if name already exist
+        if session.query(Category).filter_by(name = name).first() is not None:
+            return render_template('error.html', errormessage="Catergory with the name {} already exists".format(name))
+
         dbUpdate = Category(name=name, user_id=login_session['id'])
         session.add(dbUpdate)
         session.commit()
-        categories = session.query(Category).all()
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who are signed in, else refer to login
@@ -476,11 +480,16 @@ def createNewCategory():
 
 ## Edit existing catergory item ##
 
-@app.route('/catalog/<int:category_id>/edit/', methods=['GET', 'POST'])
-def editCategory(category_id):
-    category = session.query(Category).get(category_id)
+@app.route('/catalog/<string:category_name>/edit/', methods=['GET', 'POST'])
+def editCategory(category_name):
+    category = session.query(Category).filter_by(name = category_name).first()
     if request.method == 'POST':
         category.name = request.form['newCategoryValue']
+
+        # Check if name already exist
+        if session.query(Category).filter_by(name = category.name ).first() is not None:
+            return render_template('error.html', errormessage="Catergory with the name {} already exists".format(name))
+
         session.add(category)
         session.commit()
         return redirect(url_for('showCatalog'), 301)
@@ -488,6 +497,7 @@ def editCategory(category_id):
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
             return render_template('editCategory.html', category=category)
+
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html')
@@ -495,16 +505,21 @@ def editCategory(category_id):
 
 ## Delete existing catergory item ##
 
-@app.route('/catalog/<int:category_id>/delete/', methods=['GET', 'POST'])
-def deleteCategory(category_id):
-    category = session.query(Category).get(category_id)
+@app.route('/catalog/<string:category_name>/delete/', methods=['GET', 'POST'])
+def deleteCategory(category_name):
+    category = session.query(Category).filter_by(name = category_name).first()
+    items = session.query(Item).filter_by(category_id = category.id).all()
     if request.method == 'POST':
         session.delete(category)
         session.commit()
+
+        for item in items:
+            session.delete(item)
+            session.commit()
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who owns the category, else refer to login
-    if 'name' in login_session and category.user_id == login_session['id']:
+    if 'id' in login_session and category.user.id == login_session['id']:
         return render_template('deleteCategory.html', category=category)
     state = renderToken(32)
     login_session['state'] = state
@@ -518,10 +533,10 @@ def deleteCategory(category_id):
 
 ## List all items per catergory ##
 
-@app.route('/catalog/<int:category_id>/items/')
-def listCategoryItems(category_id):
-    category = session.query(Category).get(category_id)
-    items = session.query(Item).filter_by(category_id=category_id).all()
+@app.route('/catalog/<string:category_name>/items/')
+def listCategoryItems(category_name):
+    category = session.query(Category).filter_by(name = category_name).one()
+    items = session.query(Item).filter_by(category_id = category.id).all()
 
     # This bool decides if the user can see the edit button bases on if he is logged in or not
     hasEditAccess = False
@@ -530,35 +545,38 @@ def listCategoryItems(category_id):
 
     return render_template('listCategoryItems.html', items=items, category=category, hasEditAccess=hasEditAccess)
 
+
 ## List details of item ##
 
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/')
-def listItem(item_id, category_id):
-    item = session.query(Item).get(item_id)
-
+@app.route('/catalog/<string:category_name>/items/<string:item_name>/')
+def listItem(item_name, category_name):
+    item = session.query(Item).filter_by(name = item_name).first()
+    # category = session.query(Category).filter_by('')
     # This bool decides if the user can see the edit button bases on if he is logged in or not
     hasEditAccess = False
-    if 'name' in login_session and login_session['id'] == item.user_id:
+    if 'name' in login_session and login_session['id'] == item.user.id:
         hasEditAccess = True
 
-    return render_template('listItem.html', item=item, category_id=item.category_id, hasEditAccess=hasEditAccess)
+    return render_template('listItem.html', item=item, category_name=category_name, hasEditAccess=hasEditAccess)
+
 
 ## Add new item to category ##
 
-@app.route('/catalog/<int:category_id>/items/new/', methods=['GET', 'POST'])
-def createNewItem(category_id):
-    category = session.query(Category).get(category_id)
+@app.route('/catalog/<string:category_name>/items/new/', methods=['GET', 'POST'])
+def createNewItem(category_name):
+    category = session.query(Category).filter_by(name = category_name).first()
     if request.method == 'POST':
         newItem = Item(name = request.form['newCategoryItem'],
-        category_id=category_id, user_id=login_session['id'],
+        category_id=category.id, user_id=login_session['id'],
         description=request.form['newDescription'])
         session.add(newItem)
         session.commit()
-        return redirect(url_for('listCategoryItems', category_id=category_id),301)
+        return redirect(url_for('listCategoryItems', category_name=category.name),301)
 
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
         return render_template('createNewItem.html', category = category)
+
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html')
@@ -566,15 +584,15 @@ def createNewItem(category_id):
 
 ## Edit existing item in catergory ##
 
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/edit/', methods=['GET', 'POST'])
-def editItem(item_id, category_id):
-    item = session.query(Item).get(item_id)
+@app.route('/catalog/<string:category_name>/items/<string:item_name>/edit/', methods=['GET', 'POST'])
+def editItem(item_name, category_name):
+    item = session.query(Item).filter_by(name = item_name).first()
     if request.method == 'POST':
         item.name = request.form['newItemValue']
-        item.description = request.form['Description']
+        item.description = request.form['newDescription']
         session.add(item)
         session.commit()
-        return redirect(url_for('listCategoryItems', category_id=item.category_id),301)
+        return redirect(url_for('listCategoryItems', category_name=category_name),301)
 
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and item.user_id == login_session['id']:
@@ -586,17 +604,17 @@ def editItem(item_id, category_id):
 
 ## Delete existing item in catergory ##
 
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/delete/', methods=['GET', 'POST'])
-def deleteItem(category_id, item_id):
-    item = session.query(Item).get(item_id)
+@app.route('/catalog/<string:category_name>/items/<string:item_name>/delete/', methods=['GET', 'POST'])
+def deleteItem(category_name, item_name):
+    item = session.query(Item).filter_by(name = item_name).first()
     if request.method == 'POST':
         session.delete(item)
         session.commit()
-        return redirect(url_for('listCategoryItems', category_id=category_id), 301)
+        return redirect(url_for('listCategoryItems', category_name=category_name), 301)
 
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and item.user_id == login_session['id']:
-        return render_template('deleteItem.html', category_id=category_id, item=item)
+        return render_template('deleteItem.html', category_name=category_name, item=item)
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html')
@@ -619,7 +637,7 @@ def showCatalogApi():
 
 ## API endpoint for specific category
 
-@app.route('/catalog/<int:category_id>/items/json/')
+@app.route('/catalog/<string:category_name>/items/json/')
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
 def showItemsApi(category_id):
@@ -632,7 +650,7 @@ def showItemsApi(category_id):
 
 ## API endpoint for specific item
 
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/json')
+@app.route('/catalog/<string:category_name>/items/<int:item_id>/json')
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
 def showItemApi(category_id, item_id):

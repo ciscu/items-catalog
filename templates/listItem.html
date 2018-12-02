@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<a href="{{ url_for('showCatalog') }}">List items</a>
+  <h1>{{ item.category.name }}</h1>
+      {% if hasEditAccess == True %}
+      <a href="{{url_for('editItem', item_name=item.name, category_name=category_name)}}">Edit</a>
+      <a href="{{url_for('deleteItem', item_name=item.name, category_name=category_name)}}">Delete</a>
+      {% endif %}
+      <h1>{{ item.name }}</h1>
+    <p>{{ item.description}}</p>
+
+
+{% endblock %}
