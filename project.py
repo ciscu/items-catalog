@@ -475,7 +475,7 @@ def createNewCategory():
         return render_template('createNewCategory.html')
     state = renderToken(32)
     login_session['state'] = state
-    return render_template('signin.html')
+    return render_template('signin.html', state=state)
 
 
 ## Edit existing catergory item ##
@@ -500,7 +500,7 @@ def editCategory(category_name):
 
     state = renderToken(32)
     login_session['state'] = state
-    return render_template('signin.html')
+    return render_template('signin.html', state=state)
 
 
 ## Delete existing catergory item ##
@@ -523,7 +523,7 @@ def deleteCategory(category_name):
         return render_template('deleteCategory.html', category=category)
     state = renderToken(32)
     login_session['state'] = state
-    return render_template('signin.html')
+    return render_template('signin.html', state=state)
 
 
 #                                            #
@@ -579,7 +579,7 @@ def createNewItem(category_name):
 
     state = renderToken(32)
     login_session['state'] = state
-    return render_template('signin.html')
+    return render_template('signin.html', state=state)
 
 
 ## Edit existing item in catergory ##
@@ -599,7 +599,7 @@ def editItem(item_name, category_name):
         return render_template('editItem.html', item=item)
     state = renderToken(32)
     login_session['state'] = state
-    return render_template('signin.html')
+    return render_template('signin.html', state=state)
 
 
 ## Delete existing item in catergory ##
@@ -640,22 +640,21 @@ def showCatalogApi():
 @app.route('/catalog/<string:category_name>/items/json/')
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
-def showItemsApi(category_id):
-    items = session.query(Item).filter_by(category_id = category_id)
-    name = session.query(Category).get(category_id)
-    js = [i.apiMachine for i in items]
-    js = [name.name]+js
-    return jsonify([js])
+def showItemsApi(category_name):
+    category = session.query(Category).filter_by(name = category_name).one()
+    items = session.query(Item).filter_by(category_id = category.id).all()
+    return jsonify([i.apiMachine for i in items])
 
 
 ## API endpoint for specific item
 
-@app.route('/catalog/<string:category_name>/items/<int:item_id>/json')
+@app.route('/catalog/<string:category_name>/items/<string:item_name>/json')
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
-def showItemApi(category_id, item_id):
-    item = session.query(Item).get(item_id)
-    return jsonify([item.serialize])
+def showItemApi(category_name, item_name):
+    # category = session.query(Category).filter_by(name = category_name).one()
+    items = session.query(Item).filter_by(name = item_name).all()
+    return jsonify([i.serialize for i in items])
 
 
 @app.route('/users/json')
