@@ -66,9 +66,7 @@ class Category(Base):
     @property
     def serialize(self):
         return {
-        'id': self.id,
         'name': self.name,
-        'user': self.user.name
         }
 
 class Item(Base):
@@ -87,11 +85,15 @@ class Item(Base):
     @property
     def serialize(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            "user id": self.user_id,
-            "username": self.user.name,
-            "description": self.description
+            "category": self.category.name,
+            "name": self.name,
+            "description": self.description,
+            }
+
+    @property
+    def apiMachine(self):
+        return {
+            "name": self.name
             }
 
 engine = create_engine('sqlite:///itemscatalog.db')

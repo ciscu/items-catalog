@@ -2,7 +2,7 @@
 
 # Authentication
 Getting a token
-```curl -u Cis:cis -i -X GET http://localhost:8000/token```
+```curl -u foo:bar -i -X GET http://localhost:8000/token```
 
 If all goes well you should receive a response in the form of:
 
@@ -33,9 +33,14 @@ Following fiels need to be satisfied:
 
 Below you will see an example of a curl post request
 
-`curl -i -X POST -H 'content-type: application/json' -d '{"name":"Laure","password":"laure","email":"laure@gmail.com"}' http://localhost:8000/jsonsignup`
+`curl -i -X POST -H 'content-type: application/json' -d '{"name":"foo","password":"bar","email":"foobar@gmail.com"}' http://localhost:8000/jsonsignup`
 
 # API
+
+There are 3 types of API calls you can do
+- List of all the catalogs `http://localhost:8000/catalog/json`
+- Items per Category `http://localhost:8000/catalog/1/items/json`
+- Single item with description
 
 You can make an api request of a all the catalogs like so:  
 `curl -u username:password -i -X GET http://localhost:8000/catalog/json`

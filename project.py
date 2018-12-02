@@ -533,7 +533,7 @@ def verify_password(name_or_token, password):
 
 ## API endpoint for catalog items
 
-@app.route('/catalog/json')
+@app.route('/catalog/json/')
 @auth.login_required
 def showCatalogApi():
     catalogItems = session.query(Category).all()
@@ -545,9 +545,19 @@ def showCatalogApi():
 @auth.login_required
 def showItemsApi(category_id):
     items = session.query(Item).filter_by(category_id = category_id)
-    category = session.query(Category).get(category_id)
-    js = [i.serialize for i in items]
+    name = session.query(Category).get(category_id)
+    js = [i.apiMachine for i in items]
+    js = [name.name]+js
     return jsonify([js])
+
+
+## API endpoint for specific item
+
+@app.route('/catalog/<int:category_id>/items/<int:item_id>/json')
+@auth.login_required
+def showItemApi(category_id, item_id):
+    item = session.query(Item).get(item_id)
+    return jsonify([item.serialize])
 
 
 @app.route('/users/json')
@@ -555,6 +565,7 @@ def showItemsApi(category_id):
 def showUsersApi():
     users = session.query(User).all()
     return jsonify(Users=[u.serialize for u in users])
+
 
 
 #                                #
