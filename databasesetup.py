@@ -76,6 +76,7 @@ class Item(Base):
     # Columns
     id = Column(Integer, primary_key=True)
     name = Column(String(64), nullable=False)
+    description = Column(String)
     user_id = Column(Integer, ForeignKey('user.id'))
     category_id = Column(Integer, ForeignKey('category.id'))
 
@@ -89,7 +90,8 @@ class Item(Base):
             'id': self.id,
             'name': self.name,
             "user id": self.user_id,
-            "username": self.user.name
+            "username": self.user.name,
+            "description": self.description
             }
 
 engine = create_engine('sqlite:///itemscatalog.db')

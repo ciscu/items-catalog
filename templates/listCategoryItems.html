@@ -6,12 +6,13 @@
     <a href="{{ url_for('showCatalog') }}">Main screen</a>
     {% if hasEditAccess == True %}
     <a href="{{ url_for('deleteCategory', category_id=category.id )}}">Delete Catgory</a>
-    <a href="{{ url_for('createNewItem', category_id=category.id)}}">Create new item</a>
+    <a href="{{url_for('editCategory', category_id=category.id)}}">Edit Item</a>
+    <a href="{{ url_for('createNewItem', category_id=category.id)}}">New item</a>
     {% endif %}
   </div>
   <ul>
   {% for item in items %}
-    <li>{{ item.name }}
+    <li> <a href="{{ url_for('listItem', item_id=item.id, category_id=item.category_id) }}">{{ item.name }}</a>
       {% if hasEditAccess == True %}
       <a href="{{url_for('editItem', item_id=item.id, category_id=category.id)}}">edit</a>
       <a href="{{url_for('deleteItem', item_id=item.id, category_id=category.id)}}">Delete</a>
