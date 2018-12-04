@@ -24,13 +24,14 @@
     <p class="lead text-muted">In this app you will be able to create different Categories and their respective sub categories</p>
   </div>
 </section>
-  <div class="text-center">
+  <div class="">
   <form  class="" action="{{ url_for('createNewCategory')}}" method='POST'>
+    <label for="username">Category name:</label>
     <input class="form-control" type="text" placeholder="Category" name="newCategoryName" autofocus required>
 
     <input class="createCategory btn btn-lg btn-primary btn-block col-lg-2" type="submit" name="" value="Create">
 
-    
+
   </form>
   </div>
 {% endblock %}

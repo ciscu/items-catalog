@@ -8,7 +8,6 @@ function signInCallback(authResult) {
     // Hide the sign-in button now that the user is authorized
     $('#signinButton').attr('style', 'display: none');
     // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
-    var id_token = authResult.getAuthResponse().id_token;
     $.ajax({
       type: 'POST',
       url: '/gconnect?state={{state}}',

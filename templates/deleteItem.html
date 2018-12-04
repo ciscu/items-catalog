@@ -1,9 +1,13 @@
 {% extends "layout.html" %}
 
 {% block body %}
-  <h1>Delete {{ item.name }}</h1>
+<section class="text-left">
+  <div class="container welcome">
+    <h1 class="jumbotron-heading">Do your really want to remove: {{ item.name }}</h1>
+  </div>
+</section>
+
   <form action="{{ url_for('deleteItem', category_name=category_name, item_name=item.name)}}" method='POST'>
-    <h3>Do your realy want to delete {{ item.name }}?</h3>
-    <input type="submit" name="" value="Delete">
+    <input class="createCategory btn btn-lg btn-primary btn-block col-lg-2" type="submit" name="" value="Delete">
   </form>
 {% endblock %}

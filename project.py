@@ -205,6 +205,7 @@ def jsonsignup():
 
 
 ## Endpoint to request token for Authentication
+
 @app.route('/token')
 @auth.login_required
 def getAuthToken():

@@ -19,10 +19,17 @@
 {% endif %}
 {% endblock%}
 {% block body %}
-  <h1>Edit item {{ item.name}}</h1>
-  <form action="{{ url_for('editItem', category_name=item.category.name, item_name=item.name)}}" method='POST'>
-    <input type="text" name="newItemValue" value="{{ item.name }}">
-    <textarea name="newDescription" id="newDescription" cols="30" rows="10"></textarea>
-    <input type="submit" name="" value="Edit">
+<section class="text-left">
+  <div class="container welcome">
+    <h1 class="jumbotron-heading">Edit: {{ item.name }}</h1>
+  </div>
+</section>
+
+  <form id="edit-item" action="{{ url_for('editItem', category_name=item.category.name, item_name=item.name)}}" method='POST'>
+    <label for="newItemValue">Item Name</label>
+    <input type="text" class="form-control" name="newItemValue" value="{{ item.name }}" required autofocus>
+    <label for="newDescription">Item description</label>
+    <textarea  class="form-control" form="edit-item" name="newDescription" id="newDescription" cols="30" rows="10">{{ item.description }}</textarea>
+    <input class="createCategory btn btn-lg btn-primary btn-block col-lg-2" type="submit" name="" value="Edit">
   </form>
 {% endblock %}

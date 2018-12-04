@@ -25,7 +25,7 @@
 </section>
   <div class="text-center">
   <form action="{{ url_for('editCategory', category_name=category.name)}}" method='POST'>
-    <input class="form-control" type="text" name="newCategoryValue" placeholder="{{ category.name}}">
+    <input class="form-control" type="text" name="newCategoryValue" placeholder="{{ category.name}}" autofocus required>
     <input class="createCategory btn btn-lg btn-primary btn-block col-lg-2" type="submit" name="" value="Edit">
   </form>
 </div>

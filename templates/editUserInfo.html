@@ -1,12 +1,33 @@
 {% extends "layout.html" %}
 
 {% block body %}
-  <h1>Edit user: {{ user.name}}</h1>
-  <form action="{{ url_for('editUserInfo', user_id=user.id)}}" method='POST'>
-    <input type="text" name="newUserName" value="{{ user.name }}">
-    <input type="text" name="newUserEmail" value="{{ user.email }}">
-    <input type="password" name="newUserPassword">
+<section class="text-left">
+  <div class="container welcome">
+    <h1 class="jumbotron-heading">Edit user: {{ user.name}}</h1>
+  </div>
+</section>
 
-    <input type="submit" name="" value="Edit">
+  <form class="needs-validation" action="{{ url_for('editUserInfo', user_id=user.id)}}" method='POST'>
+    <div class="mb-3">
+      <label for="username">Username</label>
+      <input class="form-control" type="text" name="newUserName" value="{{ user.name }}" autofocus>
+    </div>
+
+    <div class="mb-3">
+      <label for="username">Email</label>
+      <div class="input-group-prepend">
+        <div class="input-group">
+          <span class="input-group-text">@</span>
+          <input class="form-control" type="email" name="newUserEmail" value="{{ user.email }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="mb3">
+      <label for="password">Password</label>
+      <input type="password" class="form-control" name="newUserPassword" placeholder="Password">
+    </div>
+
+    <input class="createCategory btn btn-lg btn-primary btn-block col-lg-2" type="submit" name="" value="Edit">
   </form>
 {% endblock %}
