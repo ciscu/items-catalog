@@ -28,7 +28,9 @@
       <a class="btn btn-primary" href="{{url_for('editItem', item_name=item.name, category_name=category_name)}}">Edit</a>
       <a class="btn btn-primary" href="{{url_for('deleteItem', item_name=item.name, category_name=category_name)}}">Delete</a>
       {% endif %}
-      <h5 class="card-text">{{item.description}}</h5>
+      <div class="blog-post">
+        <p>{{ item.description }}</p>
+      </div>
 
 
 

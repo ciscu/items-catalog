@@ -397,6 +397,7 @@ def logout():
             del login_session['picture']
             del login_session['id']
             del login_session['facebook_id']
+            flash("Logged out successfully")
             return redirect(url_for('showCatalog'))
 
 
@@ -420,6 +421,7 @@ def logout():
                 del login_session['id']
                 response = make_response(json.dumps('Successfully disconnected.'), 200)
                 response.headers['Content-Type'] = 'application/json'
+                flash("Logged out successfully")
                 return redirect(url_for('showCatalog'))
             else:
                 response = make_response(json.dumps('Failed to revoke token for given user.', 400))
@@ -433,6 +435,7 @@ def logout():
             del login_session['email']
             del login_session['id']
             del login_session['picture']
+            flash("Logged out successfully")
             return redirect(url_for('showCatalog'))
 
 
