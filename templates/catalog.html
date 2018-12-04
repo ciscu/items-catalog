@@ -1,43 +1,90 @@
 {% extends "layout.html" %}
+{% block head %}
 
-{% block body %}
-  {% if user is none %}
 
-  <a href="{{ url_for('signin')}}">Sign in</a>
+{% endblock %}
+
+{% block userstatus%}
+{% if user is none %}
+  <a class="btn btn-primary" role="button" href="{{ url_for('signin')}}">Log In</a>
 
   {% else %}
+    <div class="dropdown">
 
-  <a href="{{ url_for('logout') }}">Log out</a>
+      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown"><svg class="feather feather-users white" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="white" fill-rule="evenodd" clip-rule="evenodd"><path d="M12 0c-5.083 0-8.465 4.949-3.733 13.678 1.596 2.945-1.725 3.641-5.09 4.418-3.073.709-3.187 2.235-3.177 4.904l.004 1h23.99l.004-.969c.012-2.688-.093-4.223-3.177-4.935-3.438-.794-6.639-1.49-5.09-4.418 4.719-8.912 1.251-13.678-3.731-13.678m0 1c1.89 0 3.39.764 4.225 2.15 1.354 2.251.866 5.824-1.377 10.06-.577 1.092-.673 2.078-.283 2.932.937 2.049 4.758 2.632 6.032 2.928 2.303.534 2.412 1.313 2.401 3.93h-21.998c-.01-2.615.09-3.396 2.401-3.93 1.157-.266 5.138-.919 6.049-2.94.387-.858.284-1.843-.304-2.929-2.231-4.115-2.744-7.764-1.405-10.012.84-1.412 2.353-2.189 4.259-2.189"/></svg> Welcome {{user.name}}<span class="caret"></span></button>
+      <ul class="dropdown-menu">
+        <li><a class="btn btn-default btn-lg" role="button" href="{{ url_for('logout') }}">Log out</a></li>
+        {% if user['provider'] == 'local' %}
+        <li><a class="btn btn-default btn-lg" role="button" href="{{ url_for('editUserInfo', user_id = user['id']) }}">Edit User Info</a></li>
+        {% endif %}
+      </ul>
+    </div>
+{% endif %}
+{% endblock%}
 
-  {% if user['provider'] == 'local' %}
-  <a href="{{ url_for('editUserInfo', user_id = user['id']) }}">Edit User Info</a>
-  {% endif %}
+{% block body %}
 
-  {% endif %}
-  <h1>Catalog</h1>
-  {% if user is not none and provider != 'local' %}
-    <h3>Welcome {{ user['name'].split(' ')[0] }}</h3>
-    <a href="{{url_for('createNewCategory')}}">Create New Item</a>
-  {% endif %}
-  <ul>
-    {% for category in categories %}
-    <li> <a href="{{ url_for('listCategoryItems', category_name= category.name )}}">{{ category.name }}</a></li>
-    {% endfor %}
-  </ul>
-  <div class="">
-    <ul>
-      {% for item in items %}
+    <section class="text-left">
+      <div class="container welcome">
+        <h1 class="jumbotron-heading">Catalog</h1>
+        <p class="lead text-muted">In this app you will be able to create different Categories and their respective sub categories</p>
+        {% if user is not none and provider != 'local' %}
+        <p>
+          <a href="{{url_for('createNewCategory')}}" class="btn btn-primary my-2">Create new Category</a>
+        </p>
+        {% endif %}
+      </div>
+    </section>
 
+    <div class="album py-5 bg-light">
+      <div class="container">
+        <div class="row">
         {% for category in categories %}
-
-          {% if item.category_id == category.id %}
-            <li><a href="{{ url_for( 'listItem', category_name=category.name, item_name=item.name )}}">{{ item.name }}</a></li>
-          {% endif %}
-
+        <div class="col-md-4">
+          <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+              <h3 class="card-title"><a class="nav-link" href="{{ url_for('listCategoryItems', category_name= category.name )}}">{{ category.name }}</a></h3>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  {% if user.id == category.user_id %}
+                  <a type="button" class="btn btn-sm btn-outline-secondary" href="{{url_for('editCategory', category_name=category.name )}}">Edit</a>
+                  <a type="button" class="btn btn-sm btn-outline-secondary" href="{{url_for('deleteCategory', category_name=category.name )}}">Remove</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         {% endfor %}
+        </div>
+      </div>
+    </div>
 
-      {% endfor %}
-    </ul>
+            {#
+            {% for item in items %}
+
+              {% for category in categories %}
+
+                {% if item.category_id == category.id %}
+                    <div class="portfolio-item">
+                      <div class="card h-100">
+                        <div class="card-body">
+                          <h6 class="card-title">
+                            <a href="{{ url_for( 'listItem', category_name=category.name, item_name=item.name )}}">{{ item.name }}</a>
+                          </h6>
+                        </div>
+                      </div>
+                    </div>
+
+                {% endif %}
+
+              {% endfor %}
+
+            {% endfor %}
+            #}
+      </div>
+        </div>
   </div>
-
+</div>
+</div>
 {% endblock %}

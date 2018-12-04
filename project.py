@@ -253,6 +253,7 @@ def editUserInfo(user_id):
 
 @app.route('/gconnect', methods=['GET', 'POST'])
 def gconnect():
+    print(request.data)
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -260,6 +261,7 @@ def gconnect():
         return response
     # Obtain authorization code
     code = request.data
+
 
     try:
         # Upgrade the authorization code into a credentials object
@@ -472,7 +474,7 @@ def createNewCategory():
 
     # Only allow user who are signed in, else refer to login
     if 'name' in login_session:
-        return render_template('createNewCategory.html')
+        return render_template('createNewCategory.html', user=login_session)
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html', state=state)
@@ -484,11 +486,12 @@ def createNewCategory():
 def editCategory(category_name):
     category = session.query(Category).filter_by(name = category_name).first()
     if request.method == 'POST':
+        # Check if name already exist
+        if session.query(Category).filter_by(name = request.form['newCategoryValue']).first() is not None:
+            return render_template('error.html', errormessage="Catergory with the name {} already exists".format(request.form['newCategoryValue']))
+
         category.name = request.form['newCategoryValue']
 
-        # Check if name already exist
-        if session.query(Category).filter_by(name = category.name ).first() is not None:
-            return render_template('error.html', errormessage="Catergory with the name {} already exists".format(name))
 
         session.add(category)
         session.commit()
@@ -496,7 +499,7 @@ def editCategory(category_name):
 
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
-            return render_template('editCategory.html', category=category)
+            return render_template('editCategory.html', category=category, user=login_session)
 
     state = renderToken(32)
     login_session['state'] = state
@@ -518,9 +521,17 @@ def deleteCategory(category_name):
             session.commit()
         return redirect(url_for('showCatalog'), 301)
 
+    permissions = {}
+    if 'name' in login_session and login_session['id'] == category.user_id:
+        permissions['editAccess'] = True
+
+    if 'name' in login_session:
+        permissions['userPresent'] = True
+    else:
+        permissions['userPresent'] = False
     # Only allow user who owns the category, else refer to login
     if 'id' in login_session and category.user.id == login_session['id']:
-        return render_template('deleteCategory.html', category=category)
+        return render_template('deleteCategory.html', category=category, user=login_session, permissions=permissions )
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html', state=state)
@@ -538,12 +549,16 @@ def listCategoryItems(category_name):
     category = session.query(Category).filter_by(name = category_name).one()
     items = session.query(Item).filter_by(category_id = category.id).all()
 
-    # This bool decides if the user can see the edit button bases on if he is logged in or not
-    hasEditAccess = False
+    # This dict decides if the user can see the edit button bases on if he is logged in or not
+    permissions = {}
     if 'name' in login_session and login_session['id'] == category.user_id:
-        hasEditAccess = True
+        permissions['editAccess'] = True
 
-    return render_template('listCategoryItems.html', items=items, category=category, hasEditAccess=hasEditAccess)
+    if 'name' in login_session:
+        permissions['userPresent'] = True
+    else:
+        permissions['userPresent'] = False
+    return render_template('listCategoryItems.html', items=items, category=category, user=login_session, permissions=permissions)
 
 
 ## List details of item ##
@@ -553,11 +568,16 @@ def listItem(item_name, category_name):
     item = session.query(Item).filter_by(name = item_name).first()
     # category = session.query(Category).filter_by('')
     # This bool decides if the user can see the edit button bases on if he is logged in or not
-    hasEditAccess = False
+    permissions = {'hasEditAccess' : False}
     if 'name' in login_session and login_session['id'] == item.user.id:
-        hasEditAccess = True
+        permissions['hasEditAccess'] = True
 
-    return render_template('listItem.html', item=item, category_name=category_name, hasEditAccess=hasEditAccess)
+    if 'name' in login_session:
+        permissions['userPresent'] = True
+    else:
+        permissions['userPresent'] = False
+
+    return render_template('listItem.html', item=item, category_name=category_name, user=login_session, permissions=permissions)
 
 
 ## Add new item to category ##
@@ -573,9 +593,15 @@ def createNewItem(category_name):
         session.commit()
         return redirect(url_for('listCategoryItems', category_name=category.name),301)
 
+
+    permissions = {}
+    if 'name' in login_session:
+        permissions['userPresent'] = True
+    else:
+        permissions['userPresent'] = False
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and category.user_id == login_session['id']:
-        return render_template('createNewItem.html', category = category)
+        return render_template('createNewItem.html', category=category, user=login_session, permissions=permissions)
 
     state = renderToken(32)
     login_session['state'] = state
@@ -594,9 +620,17 @@ def editItem(item_name, category_name):
         session.commit()
         return redirect(url_for('listCategoryItems', category_name=category_name),301)
 
+    # Check is user is present or not
+    # To check login button status
+    permissions = {}
+    if 'name' in login_session:
+        permissions['userPresent'] = True
+    else:
+        permissions['userPresent'] = False
+
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and item.user_id == login_session['id']:
-        return render_template('editItem.html', item=item)
+        return render_template('editItem.html', item=item, user=login_session, permissions=permissions)
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html', state=state)
@@ -612,9 +646,14 @@ def deleteItem(category_name, item_name):
         session.commit()
         return redirect(url_for('listCategoryItems', category_name=category_name), 301)
 
+    permissions = {}
+    if 'name' in login_session:
+        permissions['userPresent'] = True
+    else:
+        permissions['userPresent'] = False
     # Only allow user who owns the category, else refer to login
     if 'name' in login_session and item.user_id == login_session['id']:
-        return render_template('deleteItem.html', category_name=category_name, item=item)
+        return render_template('deleteItem.html', category_name=category_name, item=item, permissions=permissions)
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html')

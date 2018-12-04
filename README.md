@@ -25,6 +25,8 @@ curl -u token:blank -i -X GET http://localhost:8000/catalog/json
 
 
 ## Using json post request
+
+
 You can send a POST request to the server to create a new user
 Following fiels need to be satisfied:
 - Name

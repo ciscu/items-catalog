@@ -1,44 +1,64 @@
 {% extends "layout.html" %}
 {% block head %}
+
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script src="//apis.google.com/js/platform.js?onload=start"></script>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+
 
 <!-- JS for FB and Goolge oauth login -->
 {% include "oauth.html" %}
 
+
+
+<link rel="stylesheet" href="{{ url_for('static', filename='signin.css') }}">
+
 {% endblock %}
 
 {% block body %}
-  <a href="{{ url_for('showCatalog') }}">Go Back</a>
-  <h1>Sign in</h1>
-  <form action="{{ url_for('signin')}}" method='POST'>
-    <input type="text" name="username" placeholder="Username">
-    <input type="password" name="password" placeholder="Password">
-    <input style="display:none" type="text" name="stateToken" value="{{ state }}">
-    <input type="submit" name="" value="Log in">
-  </form>
+    <body class="text-center">
 
-  <!-- GOOGLE PLUS SIGN IN-->
-    <div id="signinButton">
-    <span class="g-signin"
-      data-scope="openid email"
-      data-clientid="831715535277-54ad50bngcrmkn78melrkgo0i9dp97ei.apps.googleusercontent.com"
-      data-redirecturi="postmessage"
-      data-accesstype="offline"
-      data-cookiepolicy="single_host_origin"
-      data-callback="signInCallback"
-      data-approvalprompt="force">
-    </span>
-    </div>
-<!--END GOOGLE PLUS SIGN IN -->
 
-<!-- START FACEBOOK SIGN IN -->
-<button>
-  <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
-    <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
-  </fb:login-button>
-</button>
-<a href="{{url_for('signup')}}">Register for new account</a>
-<!--END FACEBOOK SIGN IN -->
-<div id="result"></div>
+    <form class="form-signin" action="{{ url_for('signin')}}" method='POST'>
+
+      <label for="inputEmail" class="sr-only">Username</label>
+      <input type="text" name="username" class="form-control" placeholder="Username" required autofocus>
+
+      <label for="inputPassword" class="sr-only">Password</label>
+
+      <input type="password" class="form-control" name="password" placeholder="Password">
+
+      <input style="display:none" type="text" name="stateToken" value="{{ state }}">
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+
+    </form>
+
+      <a class="btn btn-primary register" role="button" href="{{url_for('signup')}}">Register for new account</a>
+
+    <!-- GOOGLE PLUS SIGN IN-->
+
+
+      <div id="signinButton">
+      <span class="g-signin"
+        data-scope="openid email"
+        data-clientid="831715535277-54ad50bngcrmkn78melrkgo0i9dp97ei.apps.googleusercontent.com"
+        data-redirecturi="postmessage"
+        data-accesstype="offline"
+        data-cookiepolicy="single_host_origin"
+        data-callback="signInCallback"
+        data-approvalprompt="force">
+      </span>
+      </div>
+  <!--END GOOGLE PLUS SIGN IN -->
+
+  <!-- START FACEBOOK SIGN IN -->
+
+<div class="fb-login-button" data-width="330" data-max-rows="1" data-size="large" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false" data-onlogin="sendTokenToServer"></div>
+
+
+  <!--END FACEBOOK SIGN IN -->
+
+  <div id="result"></div>
+</body>
 {% endblock %}

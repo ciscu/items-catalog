@@ -1,5 +1,3 @@
-<script>
-
 // JS FOR GOOGLE OAUTH lOGIN
 
 
@@ -8,7 +6,6 @@ function signInCallback(authResult) {
     // Hide the sign-in button now that the user is authorized
     $('#signinButton').attr('style', 'display: none');
     // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
-    var id_token = authResult.getAuthResponse().id_token;
     $.ajax({
       type: 'POST',
       url: '/gconnect?state={{state}}',
@@ -38,16 +35,6 @@ function signInCallback(authResult) {
 
 
 // JS FOR FACEBOOK LOGIN
-
-(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = 'https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v3.2&appId=1895123493944410&autoLogAppEvents=1';
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));
-
-
 
 
 window.fbAsyncInit = function() {
@@ -88,8 +75,8 @@ FB.api('/me', function(response) {
     if (result) {
       $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
      setTimeout(function() {
-      window.location.href = "/catalog/";
-    }, 1000);
+      window.location.href = "/";
+     }, 4000);
 
   } else {
     $('#result').html('Failed to make a server-side call. Check your configuration and console.');
@@ -110,5 +97,3 @@ FB.api('/me', function(response) {
 
 
 // END OF JS FOR FACEBOOK LOGIN
-
-</script>
