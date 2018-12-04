@@ -44,17 +44,25 @@
       <div class="col-md-4">
         <div class="card mb-4 shadow-sm">
           <div class="card-body">
-            <h3 class="card-title"><a href="{{ url_for('listItem', item_name=item.name, category_name=category.name) }}">{{ item.name }}</a></h3>
+            <h3 class="card-title preview"><a href="{{ url_for('listItem', item_name=item.name, category_name=category.name) }}">{{ item.name }}</a></h3>
             <div class="d-flex justify-content-between align-items-center">
-              <p class="card-text">{{item.description}}</p>
-              <div class="btn-group">
-                {% if user.id == category.user_id %}
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="{{ url_for('editItem',    item_name=item.name, category_name=category.name)}}">Edit</a>
-                <a type="button" class="btn btn-sm btn-outline-secondary" href="{{ url_for('deleteItem',  item_name=item.name, category_name=category.name)}}">Remove</a>
-                {% endif %}
+
+              <div class="preview">
+                <p class="card-text preview">{{item.description}}</p>
               </div>
             </div>
           </div>
+
+                <div class="btn-group item-cards">
+                  {% if user.id == category.user_id %}
+                  <a type="button" class="btn btn-sm btn-outline-secondary" href="{{ url_for('editItem',    item_name=item.name, category_name=category.name)}}">Edit</a>
+                  <a type="button" class="btn btn-sm btn-outline-secondary" href="{{ url_for('deleteItem',  item_name=item.name, category_name=category.name)}}">Remove</a>
+                  {% endif %}
+                </div>
+
+
+
+
         </div>
       </div>
       {% endfor %}

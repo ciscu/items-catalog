@@ -52,44 +52,54 @@
           <div class="card mb-4 shadow-sm">
             <div class="card-body">
               <h3 class="card-title"><a class="nav-link" href="{{ url_for('listCategoryItems', category_name= category.name )}}">{{ category.name }}</a></h3>
+              <!-- ROW -->
+              <div class="row">
               <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
+                <div class="btn-group catalog-cards">
                   {% if user.id == category.user_id %}
                   <a type="button" class="btn btn-sm btn-outline-secondary" href="{{url_for('editCategory', category_name=category.name )}}">Edit</a>
                   <a type="button" class="btn btn-sm btn-outline-secondary" href="{{url_for('deleteCategory', category_name=category.name )}}">Remove</a>
                   {% endif %}
                 </div>
               </div>
+              </div>
+              <!-- ROW -->
             </div>
           </div>
         </div>
         {% endfor %}
         </div>
+        <section class="text-left">
+          <div class="container welcome">
+            <h1 class="jumbotron-heading">Recently added</h1>
+          </div>
+        </section>
+        <div class="row">
+        {% for item in items %}
+          {% for category in categories %}
+            {% if item.category_id == category.id %}
+              <div class="col-md-2">
+                <div class="card mb-2 shadow-sm">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h6 class="card-title">
+                        <p class="" >{{ category.name }}</p>
+                        <a href="{{ url_for( 'listItem', category_name=category.name, item_name=item.name )}}">{{ item.name }}</a>
+                      </h6>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+        </div>
       </div>
     </div>
 
-            {#
-            {% for item in items %}
 
-              {% for category in categories %}
 
-                {% if item.category_id == category.id %}
-                    <div class="portfolio-item">
-                      <div class="card h-100">
-                        <div class="card-body">
-                          <h6 class="card-title">
-                            <a href="{{ url_for( 'listItem', category_name=category.name, item_name=item.name )}}">{{ item.name }}</a>
-                          </h6>
-                        </div>
-                      </div>
-                    </div>
 
-                {% endif %}
-
-              {% endfor %}
-
-            {% endfor %}
-            #}
       </div>
         </div>
   </div>

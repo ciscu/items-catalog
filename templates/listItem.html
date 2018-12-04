@@ -24,12 +24,15 @@
     <h1 class="jumbotron-heading">{{ item.name }}</h1>
   </div>
 </section>
+      <div class="container">
       {% if permissions['hasEditAccess'] == True %}
       <a class="btn btn-primary" href="{{url_for('editItem', item_name=item.name, category_name=category_name)}}">Edit</a>
       <a class="btn btn-primary" href="{{url_for('deleteItem', item_name=item.name, category_name=category_name)}}">Delete</a>
       {% endif %}
-      <div class="blog-post">
-        <p>{{ item.description }}</p>
+
+          <p style="white-space: pre-line">{{ item.description }}</p>
+
+
       </div>
 
 

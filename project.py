@@ -456,7 +456,7 @@ def redirectCatalog():
 @app.route('/catalog/')
 def showCatalog():
     categories = session.query(Category).all()
-    items = session.query(Item).order_by(desc(Item.id)).limit(7)
+    items = session.query(Item).order_by(desc(Item.id)).limit(6)
     if 'name' not in login_session:
         return render_template('catalog.html', items=items, categories=categories, user=None)
     return render_template('catalog.html', items=items, categories=categories, user=login_session)

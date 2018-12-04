@@ -46,8 +46,28 @@ footer p {
 .card {
   height: 140px;
   max-height: 140px;
-  overflow:hidden;
 }
+.card-body{
+  padding-bottom: 0px;
+  height: 20px;
+}
+.preview {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .createCategory {
   margin-top: 30px;
+}
+.item-cards {
+  position: absolute;
+  right:    5px;
+  bottom:   5px;
+}
+
+.catalog-cards{
+  position: absolute;
+  right:    5px;
+  bottom:   5px;
 }
