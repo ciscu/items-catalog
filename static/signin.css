@@ -44,5 +44,6 @@ body {
 }
 .register {
   width: 330px;
-  padding-bottom: 50px;
+  margin-bottom: 50px;
+
 }

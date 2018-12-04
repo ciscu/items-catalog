@@ -18,14 +18,18 @@
 {% endif %}
 {% endblock%}
 {% block body %}
-<a href="{{ url_for('showCatalog') }}">List items</a>
-  <h1>{{ item.category.name }}</h1>
-      {% if hasEditAccess == True %}
-      <a href="{{url_for('editItem', item_name=item.name, category_name=category_name)}}">Edit</a>
-      <a href="{{url_for('deleteItem', item_name=item.name, category_name=category_name)}}">Delete</a>
+
+<section class="text-left">
+  <div class="container welcome">
+    <h1 class="jumbotron-heading">{{ item.name }}</h1>
+  </div>
+</section>
+      {% if permissions['hasEditAccess'] == True %}
+      <a class="btn btn-primary" href="{{url_for('editItem', item_name=item.name, category_name=category_name)}}">Edit</a>
+      <a class="btn btn-primary" href="{{url_for('deleteItem', item_name=item.name, category_name=category_name)}}">Delete</a>
       {% endif %}
-      <h1>{{ item.name }}</h1>
-    <p>{{ item.description}}</p>
+      <h5 class="card-text">{{item.description}}</h5>
+
 
 
 {% endblock %}

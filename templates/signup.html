@@ -1,12 +1,35 @@
 {% extends "layout.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}"/>
 
+{% endblock %}
 {% block body %}
-  <h1>Sign up</h1>
-  <form action="{{ url_for('signup')}}" method='POST'>
-    <input type="text" name="username" placeholder="Username" required autofocus>
-    <input type="email" name="email" placeholder="email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <input type="submit" name="" value="Sign up">
-  </form>
+<section class="text-left">
+  <div class="container welcome">
+    <h1 class="jumbotron-heading">Sign up</h1>
+    <p class="lead text-muted">Here you can sign up for the Items Catalog</p>
 
+  </div>
+</section>
+  <form class="needs-validation" action="{{ url_for('signup')}}" method='POST'>
+    <div class="mb-3">
+      <label for="username">Username</label>
+      <input type="text" class="form-control" name="username" placeholder="Username" required autofocus>
+    </div>
+
+    <div class="mb-3">
+      <label for="username">Email</label>
+      <div class="input-group-prepend">
+      <div class="input-group">
+          <span class="input-group-text">@</span>
+          <input type="email" class="form-control" name="email" placeholder="email" required>
+        </div>
+      </div>
+    </div>
+    <div class="mb3">
+      <label for="username">Password</label>
+      <input type="password" class="form-control" name="password" placeholder="Password" required>
+    </div>
+      <input type="submit" name="" class="createCategory btn btn-lg btn-primary btn-block col-lg-2" value="Sign up">
+  </form>
 {% endblock %}
