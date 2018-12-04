@@ -23,7 +23,15 @@
 {% endblock%}
 
 {% block body %}
-
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success" role="alert">
+      <p class="lead text-muted">{{ message }}</p>
+    </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
     <section class="text-left">
       <div class="container welcome">
         <h1 class="jumbotron-heading">Catalog</h1>

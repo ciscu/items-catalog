@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 from databasesetup import Base, User, Category, Item
-from flask import Flask, jsonify, request, url_for, abort, g, render_template, redirect
+from flask import Flask, jsonify, request, url_for, abort, g, render_template, redirect, flash
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine, desc
@@ -152,6 +152,7 @@ def signin():
         login_session['picture'] = uname.picture
         login_session['id'] = uname.id
         login_session['provider'] = 'local'
+        flash("Welcome back {}".format(login_session['name']))
         return redirect(url_for('showCatalog'))
     state = renderToken(32)
     login_session['state'] = state
@@ -171,7 +172,7 @@ def signup():
             return render_template('error.html', errormessage="Users already exists")
         newUser = User(name=name, email=email, provider='local')
         newUser.hash_password(password)
-
+        flash("New user '{}' Successfully created".format(newUser.name))
         session.add(newUser)
         session.commit()
 
@@ -240,6 +241,7 @@ def editUserInfo(user_id):
 
         login_session['name'] = user.name
         login_session['email'] = user.email
+        flash("User '{}' successfully updated".format(newName))
         return redirect(url_for('showCatalog'))
 
     # Only allow user who are signed in, else refer to login
@@ -327,12 +329,12 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    flash("Logged is as {}".format(login_session['name']))
     # See if user exists, if not create a new one
     user_id = getUserId(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
     login_session['id'] = user_id
-
     return "Successfully logged in with Google"
 
 
@@ -374,7 +376,7 @@ def fbconnect():
     if not user_id:
         user_id = createUser(login_session)
     login_session['id'] = user_id
-
+    flash("Welcome back {}".format(login_session['name']))
     return "Susccesfully logged user in with facebook"
 
 
@@ -471,6 +473,7 @@ def createNewCategory():
         dbUpdate = Category(name=name, user_id=login_session['id'])
         session.add(dbUpdate)
         session.commit()
+        flash("New category '{}' created".format(name))
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who are signed in, else refer to login
@@ -490,12 +493,13 @@ def editCategory(category_name):
         # Check if name already exist
         if session.query(Category).filter_by(name = request.form['newCategoryValue']).first() is not None:
             return render_template('error.html', errormessage="Catergory with the name {} already exists".format(request.form['newCategoryValue']))
-
+        flash("Category updated from '{}' to '{}'".format(category.name, request.form['newCategoryValue']))
         category.name = request.form['newCategoryValue']
 
 
         session.add(category)
         session.commit()
+
         return redirect(url_for('showCatalog'), 301)
 
     # Only allow user who owns the category, else refer to login
@@ -516,7 +520,7 @@ def deleteCategory(category_name):
     if request.method == 'POST':
         session.delete(category)
         session.commit()
-
+        flash("Category '{}' removed".format(category.name))
         for item in items:
             session.delete(item)
             session.commit()
@@ -592,6 +596,7 @@ def createNewItem(category_name):
         description=request.form['newDescription'])
         session.add(newItem)
         session.commit()
+        flash("Item '{}' created".format(newItem.name))
         return redirect(url_for('listCategoryItems', category_name=category.name),301)
 
 
@@ -619,6 +624,7 @@ def editItem(item_name, category_name):
         item.description = request.form['newDescription']
         session.add(item)
         session.commit()
+        flash("Item '{}' updated".format(item.name))
         return redirect(url_for('listCategoryItems', category_name=category_name),301)
 
     # Check is user is present or not
@@ -643,6 +649,7 @@ def editItem(item_name, category_name):
 def deleteItem(category_name, item_name):
     item = session.query(Item).filter_by(name = item_name).first()
     if request.method == 'POST':
+        flash("Item '{}' removed".format(item.name))
         session.delete(item)
         session.commit()
         return redirect(url_for('listCategoryItems', category_name=category_name), 301)
