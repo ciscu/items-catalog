@@ -1,5 +1,5 @@
 import os
-import requests, json, urllib, string
+import requests, json, urllib, string, getpass
 from time import sleep
 from requests.auth import HTTPDigestAuth
 
@@ -53,7 +53,7 @@ def mainMenu(credentials):
 def createUser(credentials):
     display_title_bar()
     name = raw_input("Enter username: ")
-    password = raw_input("Enter Password: ")
+    password = getpass.getpass("Enter Password: ")
     email = raw_input("Enter Email: ")
 
     params = {"name":name,"password":password,"email":email}
@@ -94,7 +94,7 @@ def listUsers(credentials):
     userList = users.json()
     # print(userList['Users'])
     for user in userList['Users']:
-        print("ID: \t{} \nname: \t{} \nID: \t{} \n".format(user['user name'], user['email'], user['user id']))
+        print("name: \t{} \nemail: \t{} \nID: \t{} \n".format(user['user name'], user['email'], user['user id']))
         # print("user name: {}\n email: {}".format(user[0]['user name'], user[0]['email']))
     while raw_input("q to go back to main menu: ") == 'q':
         return mainMenu(credentials)
@@ -102,7 +102,7 @@ def listUsers(credentials):
 def getCredentials():
     display_title_bar()
     name = raw_input("Enter username: ")
-    password = raw_input("Enter Password: ")
+    password = getpass.getpass("Enter Password: ")
     credentials = (name, password)
     return credentials
 

@@ -716,7 +716,7 @@ def jsonsignup():
     # Store json parameters in memory
     user = request.json.get('name')
     password = request.json.get('password')
-    email = request.json.get('password')
+    email = request.json.get('email')
 
     # Check if json paramaters are Valid
     if user is None or password is None or email is None:
