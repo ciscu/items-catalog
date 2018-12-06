@@ -144,9 +144,9 @@ def listItems(hostUrl,category, credentials):
 
     itemToDisplay = raw_input("Selecet item ")
     if itemToDisplay == 'q':
-        return getCategories(credentials)
+        return getCategories(hostUrl, credentials)
     item = items[int(itemToDisplay)-1]['name']
-    return displayItem(category, item, credentials)
+    return displayItem(hostUrl, category, item, credentials)
 
 
 # Get description
