@@ -141,16 +141,16 @@ def signin():
             return render_template('error.html', errormessage="Invalid state token {} expecting {}".format(request.form['stateToken'],login_session['state']))
 
         # If username or password are not filled in return error page
-        uname = session.query(User).filter_by(name = request.form['username']).first()
+        user = session.query(User).filter_by(email = request.form['email']).first()
         pword = request.form['password']
-        if uname is None:
+        if user is None:
             return render_template('error.html', errormessage="Username not found")
-        if uname.verify_password(pword) == False:
+        if user.verify_password(pword) == False:
             return render_template('error.html', errormessage="Bad password")
-        login_session['name'] = uname.name
-        login_session['email'] = uname.email
-        login_session['picture'] = uname.picture
-        login_session['id'] = uname.id
+        login_session['name'] = user.name
+        login_session['email'] = user.email
+        login_session['picture'] = user.picture
+        login_session['id'] = user.id
         login_session['provider'] = 'local'
         flash("Welcome back {}".format(login_session['name']))
         return redirect(url_for('showCatalog'))
