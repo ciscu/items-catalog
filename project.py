@@ -180,31 +180,6 @@ def signup():
     return render_template('signup.html')
 
 
-## Register user trough json post ##
-
-@app.route('/jsonsignup', methods=['POST'])
-def jsonsignup():
-    # Store json parameters in memory
-    user = request.json.get('name')
-    password = request.json.get('password')
-    email = request.json.get('password')
-
-    # Check if json paramaters are Valid
-    if user is None or password is None or email is None:
-        abort(400)
-
-    # Check if user already exists
-    if session.query(User).filter_by(email=email).first() is not None:
-        abort(400)
-
-    # Store user credentials in database
-    newUser = User(name=user, email=email, provider="json")
-    newUser.hash_password(password)
-    session.add(newUser)
-    session.commit()
-    return jsonify({ 'username': newUser.name })
-
-
 ## Endpoint to request token for Authentication
 
 @app.route('/token')
@@ -677,17 +652,34 @@ def deleteItem(category_name, item_name):
 
 ## API endpoint for catalog items
 
-@app.route('/catalog/json/')
+
+@app.route('/catalog/json')
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
 def showCatalogApi():
     catalogItems = session.query(Category).all()
+
     return jsonify(CatalogItems=[i.serialize for i in catalogItems])
 
 
+## Creating catalog items
+
+@app.route('/catalog/jsonnew', methods=['POST'])
+@auth.login_required
+@ratelimit(limit=300, per=30*1)
+def createJsonCategory():
+    newCatName = request.json.get('name')
+    user= session.query(User).filter_by(email=request.json.get('email')).first()
+    newCat = Category(name=newCatName, user_id=user.id)
+    session.add(newCat)
+    session.commit()
+    response = make_response(json.dumps('User {} removed successfully'.format(newCatName)), 200)
+    response.headers['content-type'] = 'application/json'
+    return response
+
 ## API endpoint for specific category
 
-@app.route('/catalog/<string:category_name>/items/json/')
+@app.route('/catalog/<string:category_name>/items/json')
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
 def showItemsApi(category_name):
@@ -706,6 +698,7 @@ def showItemApi(category_name, item_name):
     items = session.query(Item).filter_by(name = item_name).all()
     return jsonify([i.serialize for i in items])
 
+## Listing users
 
 @app.route('/users/json')
 @auth.login_required
@@ -714,6 +707,49 @@ def showUsersApi():
     users = session.query(User).all()
     return jsonify(Users=[u.serialize for u in users])
 
+
+## Register user trough json post ##
+
+@app.route('/jsonsignup', methods=['POST'])
+@auth.login_required
+def jsonsignup():
+    # Store json parameters in memory
+    user = request.json.get('name')
+    password = request.json.get('password')
+    email = request.json.get('password')
+
+    # Check if json paramaters are Valid
+    if user is None or password is None or email is None:
+        abort(400)
+
+    # Check if user already exists
+    if session.query(User).filter_by(email=email).first() is not None:
+        abort(400)
+
+    # Store user credentials in database
+    newUser = User(name=user, email=email, provider="json")
+    newUser.hash_password(password)
+    session.add(newUser)
+    session.commit()
+    return jsonify({ 'username': newUser.name })
+
+
+
+## Deleting users via json
+
+@app.route('/jsondelete', methods=['POST'])
+@auth.login_required
+def jsonDelete():
+    id = request.json.get('id')
+    user = session.query(User).get(id)
+    username = user.name
+
+    session.delete(user)
+    session.commit()
+
+    response = make_response(json.dumps('User {} removed successfully'), 200)
+    response.headers['content-type'] = 'application/json'
+    return response
 
 
 #                                #

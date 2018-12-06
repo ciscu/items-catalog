@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This project intent is to create a Python based web server that will give you
+This project intent is to create a Python based web server that will ser you
 a landing page on which, depending if you are logged in or not,
 view, create, edit and delete categories and subsequently category items.
 
