@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 from databasesetup import Base, User, Category, Item
-from flask import Flask, jsonify, request, url_for, abort, g, render_template, redirect, flash
+from flask import Flask, jsonify, request, url_for, abort, g, render_template
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine, desc
@@ -9,15 +9,17 @@ import json
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
-from flask import make_response, session as login_session
-import requests, random, string
+from flask import make_response, redirect, flash, session as login_session
+import requests
+import random
+import string
 from redis import Redis
 import time
 from functools import update_wrapper
 
-    #------------------------------------------------------------------------#
-    #                     Configuration code                                 #
-    #------------------------------------------------------------------------#
+#------------------------------------------------------------------------#
+#                     Configuration code                                 #
+#------------------------------------------------------------------------#
 
 ## Shortcuts
 
@@ -69,7 +71,7 @@ def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
 
 def on_over_limit(limit):
-    return (jsonify({'data':'You hit the rate limit','error':'429'}),429)
+    return (jsonify({'data': 'You hit the rate limit', 'error': '429'}), 429)
 
 def ratelimit(limit, per=300, send_x_headers=True,
               over_limit=on_over_limit,
@@ -101,7 +103,7 @@ def inject_x_rate_headers(response):
 @app.route('/ratelimit')
 @ratelimit(limit=300, per=30*1)
 def stopTheHogs():
-    return jsonify({'response':'this is a rate limited response'})
+    return jsonify({'response': 'this is a rate limited response'})
 
 
 ## Setup HTTP auth decorator
@@ -120,9 +122,9 @@ def verify_password(email_or_token, password):
     return True
 
 
-    #------------------------------------------------------------------------#
-    #                     Routes for the webpages                            #
-    #------------------------------------------------------------------------#
+#------------------------------------------------------------------------#
+#                     Routes for the webpages                            #
+#------------------------------------------------------------------------#
 
 
 
@@ -138,22 +140,31 @@ def signin():
     # State token to prevent forgery attacks
     if request.method == 'POST':
         if request.form['stateToken'] != login_session['state']:
-            return render_template('error.html', errormessage="Invalid state token {} expecting {}".format(request.form['stateToken'],login_session['state']))
+            return render_template('error.html', errormessage="Invalid state token {} expecting {}".format(request.form['stateToken'], login_session['state']))
 
-        # If username or password are not filled in return error page
+        # Check if user exists and the password is correct
         user = session.query(User).filter_by(email = request.form['email']).first()
         pword = request.form['password']
+
+        # User does not exist
         if user is None:
             return render_template('error.html', errormessage="Username not found")
+        # Password is wrong
         if user.verify_password(pword) == False:
             return render_template('error.html', errormessage="Bad password")
+
+        # Add the Users object paramaters to the session cookie
         login_session['name'] = user.name
         login_session['email'] = user.email
         login_session['picture'] = user.picture
         login_session['id'] = user.id
         login_session['provider'] = 'local'
+
+        # Redirect the user to the mainpage and send message to indicate succes
         flash("Welcome back {}".format(login_session['name']))
         return redirect(url_for('showCatalog'))
+
+    # Render a token and send it with the page to prevent MiM attacks
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html', state=state)
@@ -164,12 +175,17 @@ def signin():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        # Gather the info from the form
         name = request.form['username']
         email = request.form['email']
-        password = request.form['password'] # Add hash functionality with CRUD implementation
+        password = request.form['password']
+
+        # Make sure this account doesnt already exist
         users = session.query(User).filter_by(email=email).first()
         if users is not None:
             return render_template('error.html', errormessage="Users already exists")
+
+        # Create the new user object and add to database
         newUser = User(name=name, email=email, provider='local')
         newUser.hash_password(password)
         flash("New user '{}' Successfully created".format(newUser.name))
@@ -180,23 +196,17 @@ def signup():
     return render_template('signup.html')
 
 
-## Endpoint to request token for Authentication
-
-@app.route('/token')
-@auth.login_required
-def getAuthToken():
-    token = g.user.generate_auth_token()
-    return jsonify({'token': token.decode('ascii')})
-
-
 ## Edit user info ##
 
 @app.route('/users/<int:user_id>/edit/', methods=['GET', 'POST'])
 def editUserInfo(user_id):
     user = session.query(User).get(user_id)
     if request.method == 'POST':
+        # Store the form data into memory
         newEmail = request.form['newUserEmail']
         newName = request.form['newUserName']
+
+        # Hash the password
         user.hash_password(request.form['newUserPassword'])
 
         # Check if email is altered, if so, check if it already exists
@@ -204,18 +214,16 @@ def editUserInfo(user_id):
             findEmail = session.query(User).filter_by(email=newEmail).first()
             if findEmail is not None:
                 return render_template('error.html', errormessage="Email address: {} already in use".format(findEmail.email))
+
         user.name = newName
         user.email = newEmail
-
-        # Check if updated email does not already exist
-
-        user.hash_password(request.form['newUserPassword'])
 
         session.add(user)
         session.commit()
 
         login_session['name'] = user.name
         login_session['email'] = user.email
+
         flash("User '{}' successfully updated".format(newName))
         return redirect(url_for('showCatalog'))
 
@@ -329,7 +337,7 @@ def fbconnect():
     app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_secret']
 
     # Exchange short term for long term token
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id,app_secret,access_token)
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     access_token = (json.loads(result))['access_token']
@@ -423,6 +431,7 @@ def logout():
 
 ## Main Page ##
 
+# redirect users to /catalog
 @app.route('/')
 def redirectCatalog():
     return redirect(url_for('showCatalog'), 301)
@@ -430,16 +439,22 @@ def redirectCatalog():
 
 @app.route('/catalog/')
 def showCatalog():
+    # Query the categories and the 6 last create items
     categories = session.query(Category).all()
     items = session.query(Item).order_by(desc(Item.id)).limit(6)
+
+    # Present different pages based on if user is logged in or not
+    # User is not logged in
     if 'name' not in login_session:
         return render_template('catalog.html', items=items, categories=categories, user=None)
-    return render_template('catalog.html',title="Catalog" ,items=items, categories=categories, user=login_session)
+
+    # User is logged in
+    return render_template('catalog.html', title="Catalog", items=items, categories=categories, user=login_session)
 
 
 ## Add new category ##
 
-@app.route('/catalog/new/', methods=['GET','POST'])
+@app.route('/catalog/new/', methods=['GET', 'POST'])
 def createNewCategory():
     if request.method == 'POST':
         name = request.form['newCategoryName']
@@ -473,7 +488,6 @@ def editCategory(category_name):
             return render_template('error.html', errormessage="Catergory with the name {} already exists".format(request.form['newCategoryValue']))
         flash("Category updated from '{}' to '{}'".format(category.name, request.form['newCategoryValue']))
         category.name = request.form['newCategoryValue']
-
 
         session.add(category)
         session.commit()
@@ -514,7 +528,7 @@ def deleteCategory(category_name):
         permissions['userPresent'] = False
     # Only allow user who owns the category, else refer to login
     if 'id' in login_session and category.user.id == login_session['id']:
-        return render_template('deleteCategory.html', category=category, user=login_session, permissions=permissions )
+        return render_template('deleteCategory.html', category=category, user=login_session, permissions=permissions)
     state = renderToken(32)
     login_session['state'] = state
     return render_template('signin.html', state=state)
@@ -551,7 +565,7 @@ def listItem(item_name, category_name):
     item = session.query(Item).filter_by(name = item_name).first()
     # category = session.query(Category).filter_by('')
     # This bool decides if the user can see the edit button bases on if he is logged in or not
-    permissions = {'hasEditAccess' : False}
+    permissions = {'hasEditAccess': False}
     if 'name' in login_session and login_session['id'] == item.user.id:
         permissions['hasEditAccess'] = True
 
@@ -575,7 +589,7 @@ def createNewItem(category_name):
         session.add(newItem)
         session.commit()
         flash("Item '{}' created".format(newItem.name))
-        return redirect(url_for('listCategoryItems', category_name=category.name),301)
+        return redirect(url_for('listCategoryItems', category_name=category.name), 301)
 
 
     permissions = {}
@@ -603,7 +617,7 @@ def editItem(item_name, category_name):
         session.add(item)
         session.commit()
         flash("Item '{}' updated".format(item.name))
-        return redirect(url_for('listCategoryItems', category_name=category_name),301)
+        return redirect(url_for('listCategoryItems', category_name=category_name), 301)
 
     # Check is user is present or not
     # To check login button status
@@ -630,7 +644,7 @@ def deleteItem(category_name, item_name):
         flash("Item '{}' removed".format(item.name))
         session.delete(item)
         session.commit()
-        return redirect(url_for('listCategoryItems',category_name=category_name), 301)
+        return redirect(url_for('listCategoryItems', category_name=category_name), 301)
 
     permissions = {}
     if 'name' in login_session:
@@ -650,8 +664,16 @@ def deleteItem(category_name, item_name):
 #                                            #
 
 
-## API endpoint for catalog items
+## Endpoint to request token for Authentication
 
+@app.route('/token')
+@auth.login_required
+def getAuthToken():
+    token = g.user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
+
+
+## API endpoint for catalog items
 
 @app.route('/catalog/json')
 @auth.login_required
@@ -669,7 +691,7 @@ def showCatalogApi():
 @ratelimit(limit=300, per=30*1)
 def createJsonCategory():
     newCatName = request.json.get('name')
-    user= session.query(User).filter_by(email=request.json.get('email')).first()
+    user = session.query(User).filter_by(email=request.json.get('email')).first()
     newCat = Category(name=newCatName, user_id=user.id)
     session.add(newCat)
     session.commit()
@@ -731,7 +753,7 @@ def jsonsignup():
     newUser.hash_password(password)
     session.add(newUser)
     session.commit()
-    return jsonify({ 'username': newUser.name })
+    return jsonify({'username': newUser.name})
 
 
 ## Deleting users via json
@@ -756,7 +778,7 @@ def jsonDelete():
 @app.route('/jsoncheck', methods=['GET'])
 def checker():
     print(request.json.get('email'))
-    user = session.query(User).filter_by(email = request.json.get('email')).first()
+    user = session.query(User).filter_by(email=request.json.get('email')).first()
     if not user.verify_password(request.json.get('password')):
         response = make_response(json.dumps('Credentials not good, bad!'), 401)
         response.headers['content-type'] = 'application/json'
@@ -771,39 +793,38 @@ def checker():
 #                                #
 
 
-## Create a user from an Oauth login
+# Create a user from an Oauth login
 
 def createUser(login_session):
-    newUser = User(name = login_session['name'], email = login_session['email'],
-    picture = login_session['picture'], provider= login_session['provider'])
+    newUser = User(name=login_session['name'], email=login_session['email'],
+    picture = login_session['picture'], provider=login_session['provider'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email = login_session['email']).one()
+    user = session.query(User).filter_by(email=login_session['email']).one()
     return user.id
 
 
-## Returns User class object
+# Returns User class object
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id = user_id).one()
+    user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
-## Returns user id with email as given arguments
+# Returns user id with email as given arguments
 
 def getUserId(email):
     try:
-        user = session.query(User).filter_by(email = email).one()
+        user = session.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
 
 
-## Renders random size token
+# Renders random size token
 
 def renderToken(size):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(size))
-
 
 
 if __name__ == '__main__':
