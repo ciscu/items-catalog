@@ -434,7 +434,7 @@ def showCatalog():
     items = session.query(Item).order_by(desc(Item.id)).limit(6)
     if 'name' not in login_session:
         return render_template('catalog.html', items=items, categories=categories, user=None)
-    return render_template('catalog.html', items=items, categories=categories, user=login_session)
+    return render_template('catalog.html',title="Catalog" ,items=items, categories=categories, user=login_session)
 
 
 ## Add new category ##
@@ -630,7 +630,7 @@ def deleteItem(category_name, item_name):
         flash("Item '{}' removed".format(item.name))
         session.delete(item)
         session.commit()
-        return redirect(url_for('listCategoryItems', category_name=category_name), 301)
+        return redirect(url_for('listCategoryItems',category_name=category_name), 301)
 
     permissions = {}
     if 'name' in login_session:
@@ -694,8 +694,8 @@ def showItemsApi(category_name):
 @auth.login_required
 @ratelimit(limit=300, per=30*1)
 def showItemApi(category_name, item_name):
-    # category = session.query(Category).filter_by(name = category_name).one()
-    items = session.query(Item).filter_by(name = item_name).all()
+    category = session.query(Category).filter_by(name = category_name).one()
+    items = session.query(Item).filter_by(name = item_name, category_id=category.id).all()
     return jsonify([i.serialize for i in items])
 
 ## Listing users

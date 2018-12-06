@@ -35,7 +35,11 @@ footer {
 footer p {
   margin-bottom: .25rem;
 }
+.navbar {
+  height: 80px;
+}
 .navbar-dark{
+  padding-top: 0px;
   height: 80px;
 }
 
@@ -70,4 +74,7 @@ footer p {
   position: absolute;
   right:    5px;
   bottom:   5px;
+}
+.navbar-dark{
+  padding-top: 8px;
 }
