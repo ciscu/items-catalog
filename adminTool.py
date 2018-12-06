@@ -5,22 +5,11 @@ from requests.auth import HTTPDigestAuth
 
 ### FUNCTIONS ###
 
-def loginMenu():
+def getUrl():
     display_title_bar()
-    print("1. Create user")
-    print("2. Log in")
+    return raw_input("enter url: ")
 
-    option = input("Enter option: ")
-    if option < 1 or option > 2:
-        return loginMenu()
-
-    elif option == 1:
-        createUser()
-
-    elif option == 2:
-        mainMenu()
-
-def mainMenu(credentials):
+def mainMenu(hostUrl, credentials):
     display_title_bar()
     print("1. Create users")
     print("2. List users")
@@ -30,46 +19,46 @@ def mainMenu(credentials):
 
     option = input("Enter option: ")
     if option < 1 or option > 5:
-        return mainMenu(credentials)
+        return mainMenu(hostUrl, credentials)
 
     elif option == 1:
-        createUser(credentials)
+        createUser(hostUrl, credentials)
 
     elif option == 2:
-        listUsers(credentials)
+        listUsers(hostUrl, credentials)
 
     elif option == 3:
-        removeUser(credentials)
+        removeUser(hostUrl, credentials)
 
     elif option == 4:
-        getCategories(credentials)
+        getCategories(hostUrl, credentials)
 
     elif option == 5:
-        createNewCategory(credentials)
+        createNewCategory(hostUrl, credentials)
 
 
 
 # Get username and password
-def createUser(credentials):
+def createUser(hostUrl, credentials):
     display_title_bar()
     name = raw_input("Enter username: ")
     password = getpass.getpass("Enter Password: ")
     email = raw_input("Enter Email: ")
 
     params = {"name":name,"password":password,"email":email}
-    url = "http://localhost:8000/jsonsignup"
+    url = hostUrl + "/jsonsignup"
     response = requests.post(url, auth=credentials,json=params)
     createdUser = response.json()
     if response.status_code == 200:
         print("Successfully created user with username {}". format(name))
         sleep(3)
-        return mainMenu(credentials)
+        return mainMenu(hostUrl, credentials)
     else:
         print("Something went wrong")
 
-def removeUser(credentials):
+def removeUser(hostUrl, credentials):
     display_title_bar()
-    listUsers(credentials)
+    listUsers(hostUrl, credentials)
 
     toDelete = raw_input("Remove ID: ")
     # print("press q to go back")
@@ -77,39 +66,46 @@ def removeUser(credentials):
     #     return mainMenu(credentials)
 
     params = {'id': int(toDelete)}
-    url = "http://localhost:8000/jsondelete"
+    url = hostUrl +"/jsondelete"
 
     response = requests.post(url, auth=credentials,json=params)
 
     if response.status_code == 200:
         print("Successfully deleted user with id {}". format(toDelete))
         sleep(1)
-        return removeUser(credentials)
+        return removeUser(hostUrl, credentials)
     else:
         print("Something went wrong")
 
-def listUsers(credentials):
+def listUsers(hostUrl, credentials):
     display_title_bar()
-    users = requests.get("http://localhost:8000/users/json", auth=credentials)
+    users = requests.get((hostUrl+"/users/json"), auth=credentials)
     userList = users.json()
     # print(userList['Users'])
     for user in userList['Users']:
         print("name: \t{} \nemail: \t{} \nID: \t{} \n".format(user['user name'], user['email'], user['user id']))
         # print("user name: {}\n email: {}".format(user[0]['user name'], user[0]['email']))
     while raw_input("q to go back to main menu: ") == 'q':
-        return mainMenu(credentials)
+        return mainMenu(hostUrl, credentials)
 
-def getCredentials():
+def getCredentials(hostUrl):
     display_title_bar()
-    name = raw_input("Enter username: ")
+    email = raw_input("Enter email: ")
     password = getpass.getpass("Enter Password: ")
-    credentials = (name, password)
-    return credentials
+
+    params = {"email":email, "password":password}
+    url = hostUrl+"/jsoncheck"
+    response = requests.get(url, json=params)
+
+    if response.status_code != 200:
+        return getCredentials(hostUrl)
+
+    return (email, password)
 
 # Get Categories
-def getCategories(credentials):
+def getCategories(hostUrl, credentials):
     display_title_bar()
-    categories = requests.get("http://localhost:8000/catalog/json", auth=credentials)
+    categories = requests.get(hostUrl+"/catalog/json", auth=credentials)
     results = categories.json()
     print("Press q to go back")
     for result in enumerate(results['CatalogItems']):
@@ -117,44 +113,30 @@ def getCategories(credentials):
     option = raw_input("Category: ")
 
     if option == 'q':
-        return mainMenu(credentials)
+        return mainMenu(hostUrl, credentials)
 
     category = results['CatalogItems'][int(option)-1]['name']
-    return listItems(category, credentials)
+    return listItems(hostUrl, category, credentials)
 
 # Create Category
-def createNewCategory(credentials):
+def createNewCategory(hostUrl, credentials):
 
     catName = raw_input("New category name: ")
-
-    # find current users email
-    # Query for all the users and store in a list
-    users = requests.get("http://localhost:8000/users/json", auth=credentials)
-    userList = users.json()
-    # Search list for matching username and grab the email address
-    gold = ""
-    for user in userList['Users']:
-        if user['user name'] == credentials[0]:
-            gold = user['email']
-
-    params = {"name":catName,"email":gold}
-    url = "http://localhost:8000/catalog/jsonnew"
+    params = {"name":catName, "email":credentials[1]}
+    url = hostUrl+"/catalog/jsonnew"
     response = requests.post(url, auth=credentials,json=params)
     if response.status_code == 200:
         print("Successfully created catergory {}". format(catName))
         sleep(3)
-        return mainMenu(credentials)
+        return mainMenu(hostUrl, credentials)
     else:
         print("Something went wrong")
 
-
-
-
 # Get items/categories
-def listItems(category, credentials):
+def listItems(hostUrl,category, credentials):
     display_title_bar()
     choice = str(category.replace(" ","%20"))
-    url = "http://localhost:8000/catalog/{}/items/json".format(choice)
+    url = hostUrl+"/catalog/{}/items/json".format(choice)
     items = (requests.get(url, auth=(credentials))).json()
 
     for item in enumerate(items):
@@ -168,17 +150,17 @@ def listItems(category, credentials):
 
 
 # Get description
-def displayItem(category, item, credentials):
+def displayItem(hostUrl, category, item, credentials):
     display_title_bar()
     categoryChoice = str(category.replace(" ","%20"))
     itemChoice = str(item.replace(" ","%20"))
-    url= "http://localhost:8000/catalog/{}/items/{}/json".format(categoryChoice, itemChoice)
+    url= hostUrl+"/catalog/{}/items/{}/json".format(categoryChoice, itemChoice)
 
     itemDetails = (requests.get(url, auth=credentials)).json()
 
     print("Item: {} \n\nDescription: {}".format(itemDetails[0]['name'], itemDetails[0]['description']))
     if raw_input("\nPress q to go back to {}: ".format(category)) == 'q':
-        listItems(category, credentials)
+        listItems(hostUrl, category, credentials)
 
 
 # Print titlebar
@@ -192,5 +174,6 @@ def display_title_bar():
 
 
 ### MAIN PROGRAM ###
-credentials = getCredentials()
-mainMenu(credentials)
+url = getUrl()
+credentials = getCredentials(url)
+mainMenu(url, credentials)

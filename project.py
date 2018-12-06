@@ -107,13 +107,13 @@ def stopTheHogs():
 ## Setup HTTP auth decorator
 
 @auth.verify_password
-def verify_password(name_or_token, password):
+def verify_password(email_or_token, password):
     # Check if it is token
-    validToken = User.verify_auth_token(name_or_token)
+    validToken = User.verify_auth_token(email_or_token)
     if validToken:
         user = session.query(User).filter_by(id = validToken).one()
     else:
-        user = session.query(User).filter_by(name = name_or_token).first()
+        user = session.query(User).filter_by(email = email_or_token).first()
         if not user or not user.verify_password(password):
             return False
     g.user = user
@@ -734,7 +734,6 @@ def jsonsignup():
     return jsonify({ 'username': newUser.name })
 
 
-
 ## Deleting users via json
 
 @app.route('/jsondelete', methods=['POST'])
@@ -751,6 +750,21 @@ def jsonDelete():
     response.headers['content-type'] = 'application/json'
     return response
 
+
+## Check Password ##
+
+@app.route('/jsoncheck', methods=['GET'])
+def checker():
+    print(request.json.get('email'))
+    user = session.query(User).filter_by(email = request.json.get('email')).first()
+    if not user.verify_password(request.json.get('password')):
+        response = make_response(json.dumps('Credentials not good, bad!'), 401)
+        response.headers['content-type'] = 'application/json'
+        return response
+
+    response = make_response(json.dumps('User verified'), 200)
+    response.headers['content-type'] = 'application/json'
+    return response
 
 #                                #
 ##       Helper functions       ##
