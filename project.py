@@ -148,10 +148,12 @@ def signin():
 
         # User does not exist
         if user is None:
-            return render_template('error.html', errormessage="Username not found")
+            flash("Username or password not found")
+            return render_template('signin.html')
         # Password is wrong
         if user.verify_password(pword) == False:
-            return render_template('error.html', errormessage="Bad password")
+            flash("Username or password not found")
+            return render_template('signin.html')
 
         # Add the Users object paramaters to the session cookie
         login_session['name'] = user.name
