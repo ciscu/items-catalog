@@ -5,6 +5,8 @@ from sqlalchemy import create_engine, UniqueConstraint
 from passlib.apps import custom_app_context as pwd_context
 import random, string
 from itsdangerous import(TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
+import psycopg2
+
 
 Base = declarative_base()
 secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
@@ -12,11 +14,11 @@ secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    name = Column(String(32), index=True)
+    name = Column(String, index=True)
     picture = Column(String)
     email = Column(String, unique=True)
-    password_hash = Column(String(64))
-    provider = Column(String(32))
+    password_hash = Column(String)
+    provider = Column(String)
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -96,7 +98,7 @@ class Item(Base):
             "name": self.name
             }
 
-engine = create_engine('sqlite:///itemscatalog.db')
+engine = create_engine('postgresql://connection:catalogitems@localhost/catalog')
 
 
 Base.metadata.create_all(engine)

@@ -16,6 +16,8 @@ import string
 from redis import Redis
 import time
 from functools import update_wrapper
+import psycopg2
+
 
 #------------------------------------------------------------------------#
 #                     Configuration code                                 #
@@ -36,7 +38,7 @@ h = httplib2.Http()
 
 
 # Connecting to the database
-engine = create_engine('sqlite:///itemscatalog.db?check_same_thread=False')
+engine = create_engine('postgresql://connection:catalogitems@localhost/catalog')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
@@ -257,15 +259,13 @@ def gconnect():
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(
-            json.dumps('Failed to upgrade the authorization code.'), 401)
+        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Check that the access token is valid.
     access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
-           % access_token)
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'% access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
     # If there was an error in the access token info, abort.
