@@ -1,2 +1,5 @@
 DROP DATABASE IF EXISTS catalog;
 CREATE DATABASE catalog;
+
+CREATE ROLE connection WITH LOGIN PASSWORD 'catalogitems'
+GRANT ALL PRIVILEGES ON DATABASE catalog TO connection
