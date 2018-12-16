@@ -512,12 +512,12 @@ def deleteCategory(category_name):
     category = session.query(Category).filter_by(name = category_name).first()
     items = session.query(Item).filter_by(category_id = category.id).all()
     if request.method == 'POST':
-        session.delete(category)
-        session.commit()
-        flash("Category '{}' removed".format(category.name))
         for item in items:
             session.delete(item)
             session.commit()
+        session.delete(category)
+        session.commit()
+        flash("Category '{}' removed".format(category.name))
         return redirect(url_for('showCatalog'), 301)
 
     permissions = {}
